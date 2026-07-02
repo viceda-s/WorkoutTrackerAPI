@@ -1,5 +1,5 @@
 CREATE TABLE exercises (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description TEXT NOT NULL,
     type VARCHAR(20) NOT NULL CHECK (type IN ('STRENGTH', 'CARDIO', 'FLEXIBILITY')),
