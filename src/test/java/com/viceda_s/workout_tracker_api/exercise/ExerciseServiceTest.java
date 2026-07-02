@@ -1,4 +1,4 @@
-package com.viceda_s.workout_tracker_api;
+package com.viceda_s.workout_tracker_api.exercise;
 
 import java.util.Optional;
 
@@ -13,11 +13,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
-
-import com.viceda_s.workout_tracker_api.exercise.Exercise;
-import com.viceda_s.workout_tracker_api.exercise.ExerciseRepository;
-import com.viceda_s.workout_tracker_api.exercise.ExerciseService;
-import com.viceda_s.workout_tracker_api.exercise.ExerciseType;
 
 @ExtendWith(MockitoExtension.class)
 public class ExerciseServiceTest {
@@ -50,10 +45,17 @@ public class ExerciseServiceTest {
         });
     }
     
-    // Test 3: Filter By Type
+    // Test 3: Filter By Exercise Type
     @Test
     void getExercisesByType_CallsRepository() {
         exerciseService.getExercisesByType(ExerciseType.CARDIO);
         verify(exerciseRepository).findByType(ExerciseType.CARDIO);
+    }
+
+    // Test 4: Filter By Muscle Group
+    @Test
+    void getExerciseByMuscleGroup_CallsRepository() {
+        exerciseService.getExerciseByMuscleGroup(MuscleGroup.CORE);
+        verify(exerciseRepository).findByMuscleGroup(MuscleGroup.CORE);
     }
 }
