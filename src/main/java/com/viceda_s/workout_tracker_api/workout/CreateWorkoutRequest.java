@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 import lombok.Data;
 
 @Data
@@ -17,14 +19,17 @@ public class CreateWorkoutRequest {
     @Schema(example = "Push Day")
     private String name;
 
+    @NotNull
     @Schema(example = "2026-07-10T09:00:00Z")
     private Instant scheduledAt;
 
     @NotEmpty
+    @Valid
     private List<ExerciseLine> exercises;
 
     @Data
     public static class ExerciseLine {
+        @NotNull
         @Schema(example = "1")
         private Long exerciseId;
 
