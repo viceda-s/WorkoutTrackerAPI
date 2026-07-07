@@ -4,12 +4,13 @@
 
 **A secure, RESTful backend for planning workouts, browsing exercises, and tracking training progress.**
 
-![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.16-6DB33F?logo=springboot&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
-![Status](https://img.shields.io/badge/status-in%20development-yellow)
-![Version](https://img.shields.io/badge/version-0.0.1--SNAPSHOT-blue)
-![License](https://img.shields.io/badge/license-unlicensed-lightgrey)
+![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.16-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Status](https://img.shields.io/badge/status-in%20development-yellow?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.0.1--SNAPSHOT-blue?style=for-the-badge)
+![License](https://img.shields.io/badge/license-unlicensed-lightgrey?style=for-the-badge)
+[![CI](https://img.shields.io/github/actions/workflow/status/viceda-s/WorkoutTrackerAPI/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/viceda-s/WorkoutTrackerAPI/actions/workflows/ci.yml)
 
 </div>
 
@@ -34,6 +35,7 @@ The project is deliberately built with **professional-grade habits** rather than
 - ✅ **Versioned schema migrations** with Flyway, seeded with a starter set of real exercises
 - ✅ **Unit test coverage** on the service layer (JUnit 5 + Mockito) for exercises, auth, and workouts
 - ✅ **Interactive API documentation** — every endpoint annotated via springdoc-openapi with realistic request/response examples, browsable through Swagger UI
+- ✅ **Continuous Integration** — GitHub Actions runs the full test suite, including the Spring context and a real Postgres service container, on every push and pull request to `main`
 
 ## Prerequisites
 
@@ -257,9 +259,7 @@ curl "http://localhost:8080/api/workouts/reports?from=2026-07-01T00:00:00Z&to=20
 ./mvnw test
 ```
 
-## Roadmap
-
-- [ ] CI pipeline for automated build/test on push
+Tests also run automatically via GitHub Actions on every push and pull request to `main` — see the CI badge at the top of this README, or the [workflow file](.github/workflows/ci.yml) for details.
 
 ## Contributing
 
