@@ -62,7 +62,7 @@ public class WorkoutController {
 
     @GetMapping("/reports")
     public ProgressReportResponse getProgressReport(
-            @RequestParam Instant from,
+            @RequestParam Instant from, 
             @RequestParam Instant to,
             @AuthenticationPrincipal UserDetails userDetails) {
         return workoutService.generateProgressReport(userDetails.getUsername(), from, to);
