@@ -22,19 +22,10 @@ public class WorkoutService {
     private final ExerciseRepository exerciseRepository;
     private final UserRepository userRepository;
 
-    public WorkoutPlan createWorkout(String ownerEmail, CreateWorkoutRequest request) {
-        User owner = userRepository.findByEmail(ownerEmail)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
-        
-        WorkoutPlan plan = new WorkoutPlan();
-        plan.setOwner(owner);
-        plan.setName(request.getName());
-        plan.setScheduledAt(request.getScheduledAt());
-        plan.setStatus(WorkoutStatus.PLANNED);
-
+    private List<WorkoutExercise> buildWorkoutExercises(WorkoutPlan plan, List<CreateWorkoutRequest.ExerciseLine> lines) {
         List<WorkoutExercise> exercises = new ArrayList<>();
         int orderIndex = 0;
-        for (CreateWorkoutRequest.ExerciseLine line :request.getExercises()) {
+        for (CreateWorkoutRequest.ExerciseLine line : lines) {
             Exercise exercise = exerciseRepository.findById(line.getExerciseId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown exercise id: " + line.getExerciseId()));
 
@@ -48,7 +39,21 @@ public class WorkoutService {
 
             exercises.add(we);
         }
-        plan.setExercises(exercises);
+        return exercises;
+    }
+
+    public WorkoutPlan createWorkout(String ownerEmail, CreateWorkoutRequest request) {
+        User owner = userRepository.findByEmail(ownerEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+        
+        WorkoutPlan plan = new WorkoutPlan();
+        plan.setOwner(owner);
+        plan.setName(request.getName());
+        plan.setScheduledAt(request.getScheduledAt());
+        plan.setStatus(WorkoutStatus.PLANNED);
+
+        plan.setExercises(buildWorkoutExercises(plan, request.getExercises()));
+
         return workoutPlanRepository.save(plan);
     }
 
@@ -61,5 +66,40 @@ public class WorkoutService {
         } else {
             return workoutPlanRepository.findByOwnerAndStatusOrderByScheduledAtAsc(owner, status);
         }
+    }
+
+    private WorkoutPlan requireOwnedWorkout(String ownerEmail, Long id) {
+        User owner = userRepository.findByEmail(ownerEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+        return workoutPlanRepository.findByIdAndOwner(id, owner)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Workout not found"));
+    }
+
+    public WorkoutPlan getWorkoutById(String ownerEmail, Long id) {
+        return requireOwnedWorkout(ownerEmail, id);
+    }
+
+    public WorkoutPlan updateWorkout(String ownerEmail, Long id, CreateWorkoutRequest request) {
+        WorkoutPlan plan = requireOwnedWorkout(ownerEmail, id);
+
+        plan.setName(request.getName());
+        plan.setScheduledAt(request.getScheduledAt());
+
+        plan.getExercises().clear();
+        plan.getExercises().addAll(buildWorkoutExercises(plan, request.getExercises()));
+
+        return workoutPlanRepository.save(plan);
+    }
+
+    public void deleteWorkout(String ownerEmail, Long id) {
+        WorkoutPlan plan = requireOwnedWorkout(ownerEmail, id);
+        workoutPlanRepository.delete(plan);
+    }
+
+    public WorkoutPlan updateStatus(String ownerEmail, Long id, WorkoutStatus newStatus) {
+        WorkoutPlan plan = requireOwnedWorkout(ownerEmail, id);
+        plan.setStatus(newStatus);
+
+        return workoutPlanRepository.save(plan);
     }
 }

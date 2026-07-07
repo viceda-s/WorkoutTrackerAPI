@@ -2,6 +2,7 @@ package com.viceda_s.workout_tracker_api.workout;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -136,5 +137,88 @@ public class WorkoutServiceTest {
 
         verify(workoutPlanRepository).findByOwnerAndStatusOrderByScheduledAtAsc(owner, WorkoutStatus.PLANNED);
         verify(workoutPlanRepository, never()).findByOwnerOrderByScheduledAtAsc(any());
+    }
+
+    /**
+     * Fetching a workout that doesn't belong to the caller (or doesn't exist
+     * at all) should be rejected with a 404, not distinguishing between the
+     * two cases.
+    */
+    @Test
+    void getWorkoutById_NotOwned_ThrowsNotFound() {
+        User owner = new User();
+        owner.setEmail("alice@example.com");
+
+        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+            () -> workoutService.getWorkoutById("alice@example.com", 1L));
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+    }
+
+    /**
+     * Updating a workout that doesn't belong to the caller should be
+     * rejected with a 404.
+     */
+    @Test
+    void updateWorkout_NotOwned_ThrowsNotFound() {
+        User owner = new User();
+        owner.setEmail("alice@example.com");
+
+        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.empty());
+
+        assertThrows(ResponseStatusException.class, () 
+                -> workoutService.updateWorkout("alice@example.com", 1L, buildRequest(10L)));
+    }
+
+    /**
+     * Deleting a workout that doesn't belong to the caller should be
+     * rejected with a 404, and should never reach the point of deleting
+     * anything.
+     */
+    @Test
+    void deleteWorkout_NotOwned_ThrowsNotFound() {
+        User owner = new User();
+        owner.setEmail("alice@example.com");
+
+        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.empty());
+
+        assertThrows(ResponseStatusException.class, ()
+                -> workoutService.deleteWorkout("alice@example.com", 1L));
+        verify(workoutPlanRepository, never()).delete(any());
+    }
+
+    /**
+     * Updating a workout's exercises should replace the existing list
+     * entirely, not append the new exercises alongside the old ones.
+     */
+    @Test
+    void updateWorkout_ReplacesExercisesNotAppends() {
+        User owner = new User();
+        owner.setEmail("alice@example.com");
+
+        Exercise oldExercise = new Exercise();
+        oldExercise.setId(10L);
+        WorkoutExercise oldWorkoutExercise = new WorkoutExercise();
+        oldWorkoutExercise.setExercise(oldExercise);
+
+        WorkoutPlan existingPlan = new WorkoutPlan();
+        existingPlan.setOwner(owner);
+        existingPlan.setExercises(new ArrayList<>(List.of(oldWorkoutExercise)));
+
+        Exercise newExercise = new Exercise();
+        newExercise.setId(20L);
+
+        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(existingPlan));
+        when(exerciseRepository.findById(20L)).thenReturn(Optional.of(newExercise));
+
+        workoutService.updateWorkout("alice@example.com", 1L, buildRequest(20L));
+        
+        assertEquals(1, existingPlan.getExercises().size());
+        assertEquals(newExercise, existingPlan.getExercises().get(0).getExercise());
     }
 }

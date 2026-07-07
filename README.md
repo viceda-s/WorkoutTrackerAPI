@@ -29,12 +29,11 @@ The project is deliberately built with **professional-grade habits** rather than
 - ✅ **Protected routes** via a custom Spring Security filter chain (`JwtAuthFilter`)
 - ✅ **Exercise library** — browse all exercises, or filter by `exerciseType` (`STRENGTH`, `CARDIO`, `FLEXIBILITY`) or `muscleGroup` (`CHEST`, `BACK`, `LEGS`, `SHOULDERS`, `ARMS`, `CORE`)
 - ✅ **Workout plan creation & listing** — authenticated users can build a plan from exercises with sets/reps/weight, and list their own plans (optionally filtered by `status`), always scoped to the requesting user
+- ✅ **Full workout plan lifecycle** — retrieve, update (replacing its exercises, not appending to them), delete, and transition status (`PLANNED` → `COMPLETED` / `CANCELED`); any plan you don't own is rejected with `404`, whether it doesn't exist or simply isn't yours
 - ✅ **Versioned schema migrations** with Flyway, seeded with a starter set of real exercises
 - ✅ **Unit test coverage** on the service layer (JUnit 5 + Mockito) for exercises, auth, and workouts
 
 **Planned** — see [Roadmap](#roadmap)
-- 🚧 Workout plan retrieval by id, updates, and deletion (owned per-user)
-- 🚧 Workout status transitions (`PLANNED` → `COMPLETED` / `CANCELED`)
 - 🚧 Progress reports (completed volume per exercise over a date range)
 - 🚧 OpenAPI/Swagger documentation
 
@@ -179,6 +178,52 @@ curl "http://localhost:8080/api/workouts?status=PLANNED" \
 
 Results are sorted by `scheduledAt` ascending and always scoped to the authenticated caller — you'll never see another user's plans.
 
+### Get a single workout plan (authenticated)
+
+```bash
+curl http://localhost:8080/api/workouts/1 \
+  -H "Authorization: Bearer <token>"
+```
+
+Returns the plan if it belongs to you. If it doesn't exist, or belongs to someone else, the response is `404` either way — the API never reveals that a workout id exists for another user.
+
+### Update a workout plan (authenticated)
+
+```bash
+curl -X PUT http://localhost:8080/api/workouts/1 \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "name": "Push Day (Heavy)",
+        "scheduledAt": "2026-07-10T09:00:00Z",
+        "exercises": [
+          { "exerciseId": 1, "sets": 5, "reps": 5, "weight": 80.0 }
+        ]
+      }'
+```
+
+The `exercises` list fully **replaces** the plan's existing exercises rather than appending to them.
+
+### Delete a workout plan (authenticated)
+
+```bash
+curl -X DELETE http://localhost:8080/api/workouts/1 \
+  -H "Authorization: Bearer <token>"
+```
+
+Returns `204 No Content` on success.
+
+### Update a workout's status (authenticated)
+
+```bash
+curl -X PATCH http://localhost:8080/api/workouts/1/status \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"status":"COMPLETED"}'
+```
+
+Valid values are `PLANNED`, `COMPLETED`, and `CANCELED`.
+
 ### Running tests
 
 ```bash
@@ -187,9 +232,6 @@ Results are sorted by `scheduledAt` ascending and always scoped to the authentic
 
 ## Roadmap
 
-- [ ] `GET /api/workouts/{id}` — retrieve a single owned workout plan
-- [ ] `PUT /api/workouts/{id}` / `DELETE /api/workouts/{id}` — update/delete own plans
-- [ ] `PATCH /api/workouts/{id}/status` — transition a plan between `PLANNED`, `COMPLETED`, `CANCELED`
 - [ ] `GET /api/workouts/reports` — progress reports (total completed workouts and volume per exercise over a date range)
 - [ ] OpenAPI/Swagger UI via `springdoc-openapi`
 - [ ] CI pipeline for automated build/test on push
