@@ -27,9 +27,13 @@ import com.viceda_s.workout_tracker_api.user.User;
 import com.viceda_s.workout_tracker_api.user.UserRepository;
 
 /**
- * Unit tests for {@link WorkoutService}, covering workout creation (correct
- * ownership and exercise linkage, and rejection of unknown exercise ids) and
- * listing workouts with and without a status filter.
+ * Unit tests for {@link WorkoutService}, covering: workout creation (correct
+ * ownership and exercise linkage, and rejection of unknown exercise ids);
+ * listing workouts with and without a status filter; ownership enforcement
+ * on fetching, updating, and deleting a workout (rejecting non-owners with
+ * a 404, without distinguishing "doesn't exist" from "not yours"); and that
+ * updating a workout's exercises replaces the existing list rather than
+ * appending to it.
  */
 @ExtendWith(MockitoExtension.class)
 public class WorkoutServiceTest {
