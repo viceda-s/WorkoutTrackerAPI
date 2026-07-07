@@ -1,5 +1,6 @@
 package com.viceda_s.workout_tracker_api.workout;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class WorkoutService {
     
     private final WorkoutPlanRepository workoutPlanRepository;
+    private final WorkoutExerciseRepository workoutExerciseRepository;
     private final ExerciseRepository exerciseRepository;
     private final UserRepository userRepository;
 
@@ -101,5 +103,17 @@ public class WorkoutService {
         plan.setStatus(newStatus);
 
         return workoutPlanRepository.save(plan);
+    }
+
+    public ProgressReportResponse generateProgressReport(String ownerEmail, Instant from, Instant to) {
+        User owner = userRepository.findByEmail(ownerEmail)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+
+        long totalCompleted = workoutPlanRepository.countByOwnerAndStatusAndScheduledAtBetween(
+                owner, WorkoutStatus.COMPLETED, from, to);
+        List<ExerciseVolumeSummary> volumes = workoutExerciseRepository.summarizeVolumeByOwnerAndPeriod(
+            owner, from, to);
+
+        return new ProgressReportResponse(totalCompleted, volumes);
     }
 }

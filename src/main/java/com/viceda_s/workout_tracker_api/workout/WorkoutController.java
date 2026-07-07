@@ -1,5 +1,6 @@
 package com.viceda_s.workout_tracker_api.workout;
 
+import java.time.Instant;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -57,5 +58,13 @@ public class WorkoutController {
     @PatchMapping("/{id}/status")
     public WorkoutPlan updateStatus(@PathVariable Long id, @RequestBody UpdateStatusRequest request, @AuthenticationPrincipal UserDetails userDetails) {
         return workoutService.updateStatus(userDetails.getUsername(), id, request.getStatus());
+    }
+
+    @GetMapping("/reports")
+    public ProgressReportResponse getProgressReport(
+            @RequestParam Instant from,
+            @RequestParam Instant to,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return workoutService.generateProgressReport(userDetails.getUsername(), from, to);
     }
 }

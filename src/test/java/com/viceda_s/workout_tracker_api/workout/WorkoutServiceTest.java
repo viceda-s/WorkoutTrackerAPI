@@ -47,6 +47,9 @@ public class WorkoutServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private WorkoutExerciseRepository workoutExerciseRepository;
+
     @InjectMocks
     private WorkoutService workoutService;
 
@@ -224,5 +227,54 @@ public class WorkoutServiceTest {
         
         assertEquals(1, existingPlan.getExercises().size());
         assertEquals(newExercise, existingPlan.getExercises().get(0).getExercise());
+    }
+
+    /**
+     * Generating a progress report should combine the completed-workout
+     * count and per-exercise volume summary from their respective
+     * repositories into one response.
+     */
+    @Test
+    void generateProgressReport_AssemblesCountAndVolumes() {
+        User owner = new User();
+        owner.setEmail("alice@example.com");
+
+        Instant from = Instant.parse("2026-01-01T00:00:00Z");
+        Instant to = Instant.parse("2026-01-31T00:00:00Z");
+
+        List<ExerciseVolumeSummary> volumes = List.of(new ExerciseVolumeSummary("Bench Press", new BigDecimal("700.0")));
+
+        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(workoutPlanRepository.countByOwnerAndStatusAndScheduledAtBetween(owner, WorkoutStatus.COMPLETED, from, to))
+                .thenReturn(2L);
+        when(workoutExerciseRepository.summarizeVolumeByOwnerAndPeriod(owner, from, to))
+                .thenReturn(volumes);
+        
+        ProgressReportResponse report = workoutService.generateProgressReport("alice@example.com", from, to);
+        assertEquals(2L, report.getTotalCompletedWorkouts());
+        assertEquals(volumes, report.getExerciseVolumes());
+    }
+
+    /**
+     * The completed-workout count must always be queried specifically for
+     * COMPLETED status, not left to default to something else.
+     */
+    @Test
+    void generateProgressReport_CountsOnlyCompletedStatus() {
+        User owner = new User();
+        owner.setEmail("alice@example.com");
+
+        Instant from = Instant.parse("2026-01-01T00:00:00Z");
+        Instant to = Instant.parse("2026-01-31T00:00:00Z");
+
+        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(workoutPlanRepository.countByOwnerAndStatusAndScheduledAtBetween(any(), any(), any(), any()))
+                .thenReturn(0L);
+        when(workoutExerciseRepository.summarizeVolumeByOwnerAndPeriod(any(), any(), any()))
+                .thenReturn(List.of());
+        
+        workoutService.generateProgressReport("alice@example.com", from, to);
+
+        verify(workoutPlanRepository).countByOwnerAndStatusAndScheduledAtBetween(owner, WorkoutStatus.COMPLETED, from, to);
     }
 }

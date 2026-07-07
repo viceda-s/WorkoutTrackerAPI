@@ -17,7 +17,7 @@
 
 ## About
 
-**WorkoutTrackerAPI** is a backend service for a fitness tracking application, built to satisfy the [roadmap.sh Fitness Workout Tracker](https://roadmap.sh/projects/fitness-workout-tracker) project spec. Users register and authenticate, browse a library of exercises filterable by type and muscle group, build workout plans from those exercises with sets/reps/weight, and — as the remaining milestones land — will be able to update/complete plans and pull progress reports over time.
+**WorkoutTrackerAPI** is a backend service for a fitness tracking application, built to satisfy the [roadmap.sh Fitness Workout Tracker](https://roadmap.sh/projects/fitness-workout-tracker) project spec. Users register and authenticate, browse a library of exercises filterable by type and muscle group, build and manage workout plans from those exercises with sets/reps/weight, and pull progress reports summarizing completed training volume over a date range.
 
 The project is deliberately built with **professional-grade habits** rather than tutorial shortcuts: schema changes are version-controlled through Flyway migrations (no `hibernate.ddl-auto=update`), authentication is stateless JWT rather than server-side sessions, passwords are never stored or logged in plaintext, workout data is always scoped to its owner, and the codebase is organized by feature (`auth`, `user`, `exercise`, `workout`, `config`) so each vertical slice — entity → repository → service → controller — can be reasoned about independently.
 
@@ -30,11 +30,11 @@ The project is deliberately built with **professional-grade habits** rather than
 - ✅ **Exercise library** — browse all exercises, or filter by `exerciseType` (`STRENGTH`, `CARDIO`, `FLEXIBILITY`) or `muscleGroup` (`CHEST`, `BACK`, `LEGS`, `SHOULDERS`, `ARMS`, `CORE`)
 - ✅ **Workout plan creation & listing** — authenticated users can build a plan from exercises with sets/reps/weight, and list their own plans (optionally filtered by `status`), always scoped to the requesting user
 - ✅ **Full workout plan lifecycle** — retrieve, update (replacing its exercises, not appending to them), delete, and transition status (`PLANNED` → `COMPLETED` / `CANCELED`); any plan you don't own is rejected with `404`, whether it doesn't exist or simply isn't yours
+- ✅ **Progress reports** — total completed workouts and total training volume (sets × reps × weight) per exercise over a date range, scoped to the caller's own completed plans
 - ✅ **Versioned schema migrations** with Flyway, seeded with a starter set of real exercises
 - ✅ **Unit test coverage** on the service layer (JUnit 5 + Mockito) for exercises, auth, and workouts
 
 **Planned** — see [Roadmap](#roadmap)
-- 🚧 Progress reports (completed volume per exercise over a date range)
 - 🚧 OpenAPI/Swagger documentation
 
 ## Prerequisites
@@ -224,6 +224,25 @@ curl -X PATCH http://localhost:8080/api/workouts/1/status \
 
 Valid values are `PLANNED`, `COMPLETED`, and `CANCELED`.
 
+### Get a progress report (authenticated)
+
+```bash
+curl "http://localhost:8080/api/workouts/reports?from=2026-07-01T00:00:00Z&to=2026-07-31T23:59:59Z" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "totalCompletedWorkouts": 4,
+  "exerciseVolumes": [
+    { "exerciseName": "Bench Press", "totalVolume": 1600.0 },
+    { "exerciseName": "Squat", "totalVolume": 2400.0 }
+  ]
+}
+```
+
+`from` and `to` are required ISO-8601 timestamps. Only `COMPLETED` plans scheduled within that range count — `PLANNED` and `CANCELED` plans are excluded, and volume is summed per exercise as `sets × reps × weight`.
+
 ### Running tests
 
 ```bash
@@ -232,7 +251,6 @@ Valid values are `PLANNED`, `COMPLETED`, and `CANCELED`.
 
 ## Roadmap
 
-- [ ] `GET /api/workouts/reports` — progress reports (total completed workouts and volume per exercise over a date range)
 - [ ] OpenAPI/Swagger UI via `springdoc-openapi`
 - [ ] CI pipeline for automated build/test on push
 
