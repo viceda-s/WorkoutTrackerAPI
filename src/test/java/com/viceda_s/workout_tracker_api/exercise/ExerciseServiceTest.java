@@ -14,6 +14,10 @@ import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Unit tests for {@link ExerciseService}, covering lookup by id (success and
+ * not-found cases) and filtering by exercise type and muscle group.
+ */
 @ExtendWith(MockitoExtension.class)
 public class ExerciseServiceTest {
 
@@ -23,7 +27,9 @@ public class ExerciseServiceTest {
     @InjectMocks
     private ExerciseService exerciseService;
 
-    // Test 1: Get By ID (Success)
+    /**
+     * Fetching an exercise by a valid id should return that exercise.
+     */
     @Test
     void getExerciseById_Success() {
         Exercise dummyExercise = new Exercise();
@@ -36,23 +42,33 @@ public class ExerciseServiceTest {
         assertEquals("Squat", result.getName());
     }
 
-    // Test 2: Get By ID (Not Found)
+    /**
+     * Fetching an exercise by an id that doesn't exist should throw a
+     * {@link ResponseStatusException} rather than returning null.
+     */
     @Test
     void getExerciseById_NotFound_ThrowsException() {
         when(exerciseRepository.findById(99L)).thenReturn(Optional.empty());
-        assertThrows(ResponseStatusException.class, () -> {
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
             exerciseService.getExerciseById(99L);
         });
+        assertNotNull(ex);
     }
     
-    // Test 3: Filter By Exercise Type
+    /**
+     * Filtering by exercise type should delegate to the repository's
+     * findByType query with the given type.
+     */
     @Test
     void getExercisesByType_CallsRepository() {
         exerciseService.getExercisesByType(ExerciseType.CARDIO);
         verify(exerciseRepository).findByType(ExerciseType.CARDIO);
     }
 
-    // Test 4: Filter By Muscle Group
+    /**
+     * Filtering by muscle group should delegate to the repository's
+     * findByMuscleGroup query with the given muscle group.
+     */
     @Test
     void getExerciseByMuscleGroup_CallsRepository() {
         exerciseService.getExerciseByMuscleGroup(MuscleGroup.CORE);

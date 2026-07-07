@@ -1,23 +1,23 @@
 package com.viceda_s.workout_tracker_api.workout;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.viceda_s.workout_tracker_api.exercise.Exercise;
@@ -25,6 +25,11 @@ import com.viceda_s.workout_tracker_api.exercise.ExerciseRepository;
 import com.viceda_s.workout_tracker_api.user.User;
 import com.viceda_s.workout_tracker_api.user.UserRepository;
 
+/**
+ * Unit tests for {@link WorkoutService}, covering workout creation (correct
+ * ownership and exercise linkage, and rejection of unknown exercise ids) and
+ * listing workouts with and without a status filter.
+ */
 @ExtendWith(MockitoExtension.class)
 public class WorkoutServiceTest {
     
@@ -54,8 +59,12 @@ public class WorkoutServiceTest {
         return request;
     }
 
+    /**
+     * Creating a workout should save it linked to the resolved owner and
+     * with its exercise lines correctly attached.
+     */
     @Test
-    void createWorkout_SavesWithCorrecrOwnerAndExercise() {
+    void createWorkout_SavesWithCorrectOwnerAndExercise() {
         User owner = new User();
         owner.setEmail("alice@example.com");
 
@@ -76,6 +85,11 @@ public class WorkoutServiceTest {
         assertEquals(exercise, savePlan.getExercises().get(0).getExercise());
     }
 
+    /**
+     * Creating a workout that references an exercise id which doesn't exist
+     * should be rejected with a 400 Bad Request, and should never reach the
+     * point of saving anything.
+     */
     @Test
     void createWorkout_UnknownExerciseId_ThrowsAndNeverSaves() {
         User owner = new User();
@@ -84,12 +98,16 @@ public class WorkoutServiceTest {
         when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
         when(exerciseRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThrows(ResponseStatusException.class,
-                () -> workoutService.createWorkout("alice@example.com", buildRequest(999L)));
-
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+            () -> workoutService.createWorkout("alice@example.com", buildRequest(999L)));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
         verify(workoutPlanRepository, never()).save(any());
     }
 
+    /**
+     * Listing workouts without a status filter should query for all of the
+     * owner's workouts, not the status-filtered variant.
+     */
     @Test
     void listWorkouts_NoStatus_CallsFindByOwnerOnly() {
         User owner = new User();
@@ -103,6 +121,10 @@ public class WorkoutServiceTest {
         verify(workoutPlanRepository, never()).findByOwnerAndStatusOrderByScheduledAtAsc(any(), any());
     }
 
+    /**
+     * Listing workouts with a status filter should query using that status,
+     * not the unfiltered variant.
+     */
     @Test
     void listWorkouts_WithStatus_CallsFindByOwnerAndStatus() {
         User owner = new User();

@@ -15,12 +15,17 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.viceda_s.workout_tracker_api.user.User;
 import com.viceda_s.workout_tracker_api.user.UserRepository;
 
+/**
+ * Unit tests for {@link AuthService}, covering successful registration and
+ * rejection of duplicate emails.
+ */
 @ExtendWith(MockitoExtension.class)
 public class AuthServiceTest {
     
@@ -33,7 +38,10 @@ public class AuthServiceTest {
     @InjectMocks
     private AuthService authService;
 
-    // Test 1: Register with a new email
+    /**
+     * Registering with an email that isn't already in use should save 
+     * the user with their password hashed, not stored in plaintext.
+     */ 
     @Test
     void registerNewEmail_SavesHashedPassword() {
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.empty());
@@ -54,7 +62,10 @@ public class AuthServiceTest {
         assertNotEquals("plainPassword123", savedUser.getPassword());
     }
 
-    // Test 2: Register with a duplicate email
+    /**
+     * Registering with an email already in use should be rejected 
+     * properly before any write on the database.
+     */
     @Test
     void registerDupEmail() {
         
@@ -65,9 +76,9 @@ public class AuthServiceTest {
         request.setEmail("test@example.com");
         request.setPassword("whatever");
         request.setName("Test");
-        assertThrows(ResponseStatusException.class, () -> {
-            authService.register(request);
-        });
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+            authService.register(request));
+        assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
         verify(userRepository, never()).save(any());
     }
 }
