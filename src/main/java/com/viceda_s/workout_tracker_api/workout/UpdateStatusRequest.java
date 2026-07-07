@@ -1,8 +1,11 @@
 package com.viceda_s.workout_tracker_api.workout;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import lombok.Data;
 
 @Data
 public class UpdateStatusRequest {
-    private WorkoutStatus status;    
+    @Schema(example = "COMPLETED")
+    private WorkoutStatus status;
 }

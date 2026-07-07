@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
@@ -12,8 +14,10 @@ import lombok.Data;
 public class CreateWorkoutRequest {
 
     @NotBlank
+    @Schema(example = "Push Day")
     private String name;
 
+    @Schema(example = "2026-07-10T09:00:00Z")
     private Instant scheduledAt;
 
     @NotEmpty
@@ -21,8 +25,16 @@ public class CreateWorkoutRequest {
 
     @Data
     public static class ExerciseLine {
+        @Schema(example = "1")
         private Long exerciseId;
-        private Integer sets, reps;
+
+        @Schema(example = "4")
+        private Integer sets;
+
+        @Schema(example = "8")
+        private Integer reps;
+
+        @Schema(example = "60.0")
         private BigDecimal weight;
     }
 }

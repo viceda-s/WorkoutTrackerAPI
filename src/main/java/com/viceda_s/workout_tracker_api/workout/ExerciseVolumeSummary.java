@@ -2,11 +2,15 @@ package com.viceda_s.workout_tracker_api.workout;
 
 import java.math.BigDecimal;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import lombok.Value;
 
 @Value
 public class ExerciseVolumeSummary {
+    @Schema(example = "Bench Press")
     String exerciseName;
-    BigDecimal totalVolume;
 
+    @Schema(example = "1600.0")
+    BigDecimal totalVolume;
 }

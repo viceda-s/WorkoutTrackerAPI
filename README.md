@@ -17,7 +17,7 @@
 
 ## About
 
-**WorkoutTrackerAPI** is a backend service for a fitness tracking application, built to satisfy the [roadmap.sh Fitness Workout Tracker](https://roadmap.sh/projects/fitness-workout-tracker) project spec. Users register and authenticate, browse a library of exercises filterable by type and muscle group, build and manage workout plans from those exercises with sets/reps/weight, and pull progress reports summarizing completed training volume over a date range.
+**WorkoutTrackerAPI** is a backend service for a fitness tracking application, built to satisfy the [roadmap.sh Fitness Workout Tracker](https://roadmap.sh/projects/fitness-workout-tracker) project spec. Users register and authenticate, browse a library of exercises filterable by type and muscle group, build and manage workout plans from those exercises with sets/reps/weight, and pull progress reports summarizing completed training volume over a date range. The full API surface is documented and explorable through a live Swagger UI.
 
 The project is deliberately built with **professional-grade habits** rather than tutorial shortcuts: schema changes are version-controlled through Flyway migrations (no `hibernate.ddl-auto=update`), authentication is stateless JWT rather than server-side sessions, passwords are never stored or logged in plaintext, workout data is always scoped to its owner, and the codebase is organized by feature (`auth`, `user`, `exercise`, `workout`, `config`) so each vertical slice — entity → repository → service → controller — can be reasoned about independently.
 
@@ -33,9 +33,7 @@ The project is deliberately built with **professional-grade habits** rather than
 - ✅ **Progress reports** — total completed workouts and total training volume (sets × reps × weight) per exercise over a date range, scoped to the caller's own completed plans
 - ✅ **Versioned schema migrations** with Flyway, seeded with a starter set of real exercises
 - ✅ **Unit test coverage** on the service layer (JUnit 5 + Mockito) for exercises, auth, and workouts
-
-**Planned** — see [Roadmap](#roadmap)
-- 🚧 OpenAPI/Swagger documentation
+- ✅ **Interactive API documentation** — every endpoint annotated via springdoc-openapi with realistic request/response examples, browsable through Swagger UI
 
 ## Prerequisites
 
@@ -87,6 +85,16 @@ Make sure you have the following installed before setting up the project:
    ```
 
    Flyway applies all pending migrations automatically on startup — no manual migration step needed. The API is now available at `http://localhost:8080`.
+
+5. **Explore the API**
+
+   Every endpoint is documented with realistic examples via Swagger UI:
+
+   ```
+   http://localhost:8080/swagger-ui.html
+   ```
+
+   The raw OpenAPI spec is available at `http://localhost:8080/v3/api-docs`.
 
 ## Usage
 
@@ -251,7 +259,6 @@ curl "http://localhost:8080/api/workouts/reports?from=2026-07-01T00:00:00Z&to=20
 
 ## Roadmap
 
-- [ ] OpenAPI/Swagger UI via `springdoc-openapi`
 - [ ] CI pipeline for automated build/test on push
 
 ## Contributing

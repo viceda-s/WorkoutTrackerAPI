@@ -277,4 +277,43 @@ public class WorkoutServiceTest {
 
         verify(workoutPlanRepository).countByOwnerAndStatusAndScheduledAtBetween(owner, WorkoutStatus.COMPLETED, from, to);
     }
+
+    /**
+     * Changing a workout's status should update and save it when the
+     * caller owns the plan.
+     */
+    @Test
+    void updateStatus_ChangesAndSaves() {
+        User owner = new User();
+        owner.setEmail("alice@example.com");
+
+        WorkoutPlan plan = new WorkoutPlan();
+        plan.setOwner(owner);
+        plan.setStatus(WorkoutStatus.PLANNED);
+
+        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(plan));
+
+        workoutService.updateStatus("alice@example.com", 1L, WorkoutStatus.COMPLETED);
+
+        assertEquals(WorkoutStatus.COMPLETED, plan.getStatus());
+        verify(workoutPlanRepository).save(plan);
+    }
+
+    /**
+     * Changing the status of a workout that doesn't belong to the caller
+     * should be rejected with a 404.
+     */
+    @Test
+    void updateStatus_NotOwned_ThrowsNotFound() {
+        User owner = new User();
+        owner.setEmail("alice@example.com");
+
+        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.empty());
+
+        assertThrows(ResponseStatusException.class,
+                () -> workoutService.updateStatus("alice@example.com", 1L, WorkoutStatus.COMPLETED));
+    }
+
 }

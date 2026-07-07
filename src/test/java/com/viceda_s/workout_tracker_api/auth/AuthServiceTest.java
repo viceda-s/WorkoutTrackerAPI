@@ -35,6 +35,9 @@ public class AuthServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private JwtService jwtService;
+
     @InjectMocks
     private AuthService authService;
 
@@ -81,4 +84,66 @@ public class AuthServiceTest {
         assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
         verify(userRepository, never()).save(any());
     }
+
+    /**
+     * Logging in with correct credentials should return a token generated
+     * for that user's email.
+     */
+    @Test
+    void login_CorrectCredentials_ReturnsToken() {
+        User user = new User();
+        user.setEmail("test@example.com");
+        user.setPassword("hashed-value");
+
+        LoginRequest request = new LoginRequest();
+        request.setEmail("test@example.com");
+        request.setPassword("plainPassword123");
+
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("plainPassword123", "hashed-value")).thenReturn(true);
+        when(jwtService.generateToken("test@example.com")).thenReturn("fake-jwt-token");
+
+        AuthResponse response = authService.login(request);
+
+        assertEquals("fake-jwt-token", response.getToken());
+    }
+
+    /**
+     * Logging in with the wrong password should be rejected with a 401.
+     */
+    @Test
+    void login_WrongPassword_ThrowsUnauthorized() {
+        User user = new User();
+        user.setEmail("test@example.com");
+        user.setPassword("hashed-value");
+
+        LoginRequest request = new LoginRequest();
+        request.setEmail("test@example.com");
+        request.setPassword("wrongPassword");
+
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrongPassword", "hashed-value")).thenReturn(false);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> authService.login(request));
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
+    }
+
+    /**
+     * Logging in with an unregistered email should be rejected with the
+     * same 401 as a wrong password.
+     */
+    @Test
+    void login_UnknownEmail_ThrowsUnauthorized() {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("nobody@example.com");
+        request.setPassword("whatever");
+
+        when(userRepository.findByEmail("nobody@example.com")).thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> authService.login(request));
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
+    }
+
 }
