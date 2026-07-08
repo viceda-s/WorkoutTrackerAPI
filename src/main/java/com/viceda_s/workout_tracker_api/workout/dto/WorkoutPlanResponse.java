@@ -1,7 +1,9 @@
-package com.viceda_s.workout_tracker_api.workout;
+package com.viceda_s.workout_tracker_api.workout.dto;
 
 import java.time.Instant;
 import java.util.List;
+
+import com.viceda_s.workout_tracker_api.workout.WorkoutStatus;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

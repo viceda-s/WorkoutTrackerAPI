@@ -12,6 +12,9 @@ import com.viceda_s.workout_tracker_api.exercise.Exercise;
 import com.viceda_s.workout_tracker_api.exercise.ExerciseRepository;
 import com.viceda_s.workout_tracker_api.user.User;
 import com.viceda_s.workout_tracker_api.user.UserService;
+import com.viceda_s.workout_tracker_api.workout.dto.CreateWorkoutRequest;
+import com.viceda_s.workout_tracker_api.workout.dto.ExerciseVolumeSummary;
+import com.viceda_s.workout_tracker_api.workout.dto.ProgressReportResponse;
 
 import lombok.RequiredArgsConstructor;
 

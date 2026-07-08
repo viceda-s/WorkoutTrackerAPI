@@ -163,13 +163,12 @@ curl -X POST http://localhost:8080/api/workouts \
 ```json
 {
   "id": 1,
-  "owner": { "id": 1, "email": "user@example.com", "name": "Jane Doe", "createdAt": "2026-07-06T10:00:00Z" },
   "name": "Push Day",
   "scheduledAt": "2026-07-10T09:00:00Z",
   "status": "PLANNED",
   "exercises": [
-    { "id": 1, "exercise": { "id": 1, "name": "Bench Press" }, "sets": 4, "reps": 8, "orderIndex": 0, "weight": 60.0 },
-    { "id": 2, "exercise": { "id": 9, "name": "Lateral Raise" }, "sets": 3, "reps": 12, "orderIndex": 1, "weight": 15.0 }
+    { "exerciseId": 1, "exerciseName": "Bench Press", "sets": 4, "reps": 8, "weight": 60.0, "orderIndex": 0 },
+    { "exerciseId": 9, "exerciseName": "Lateral Raise", "sets": 3, "reps": 12, "weight": 15.0, "orderIndex": 1 }
   ]
 }
 ```

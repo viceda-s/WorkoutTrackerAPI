@@ -14,6 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.viceda_s.workout_tracker_api.auth.dto.AuthResponse;
+import com.viceda_s.workout_tracker_api.auth.dto.LoginRequest;
+import com.viceda_s.workout_tracker_api.auth.dto.RegisterRequest;
+import com.viceda_s.workout_tracker_api.auth.dto.RegisterResponse;
 import com.viceda_s.workout_tracker_api.user.User;
 
 import jakarta.validation.Valid;

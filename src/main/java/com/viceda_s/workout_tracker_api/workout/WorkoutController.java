@@ -18,6 +18,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.viceda_s.workout_tracker_api.workout.dto.CreateWorkoutRequest;
+import com.viceda_s.workout_tracker_api.workout.dto.ProgressReportResponse;
+import com.viceda_s.workout_tracker_api.workout.dto.UpdateStatusRequest;
+import com.viceda_s.workout_tracker_api.workout.dto.WorkoutExerciseResponse;
+import com.viceda_s.workout_tracker_api.workout.dto.WorkoutPlanResponse;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

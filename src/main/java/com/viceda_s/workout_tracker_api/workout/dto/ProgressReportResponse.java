@@ -1,4 +1,4 @@
-package com.viceda_s.workout_tracker_api.workout;
+package com.viceda_s.workout_tracker_api.workout.dto;
 
 import java.util.List;
 

@@ -1,4 +1,7 @@
-package com.viceda_s.workout_tracker_api.exercise;
+package com.viceda_s.workout_tracker_api.exercise.dto;
+
+import com.viceda_s.workout_tracker_api.exercise.ExerciseType;
+import com.viceda_s.workout_tracker_api.exercise.MuscleGroup;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

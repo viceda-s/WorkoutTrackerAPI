@@ -19,6 +19,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.viceda_s.workout_tracker_api.auth.dto.AuthResponse;
+import com.viceda_s.workout_tracker_api.auth.dto.LoginRequest;
+import com.viceda_s.workout_tracker_api.auth.dto.RegisterRequest;
 import com.viceda_s.workout_tracker_api.user.User;
 import com.viceda_s.workout_tracker_api.user.UserRepository;
 

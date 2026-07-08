@@ -8,9 +8,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.viceda_s.workout_tracker_api.user.User;
+import com.viceda_s.workout_tracker_api.workout.dto.ExerciseVolumeSummary;
 
 public interface WorkoutExerciseRepository extends JpaRepository<WorkoutExercise, Long> {
-    @Query("SELECT new com.viceda_s.workout_tracker_api.workout.ExerciseVolumeSummary(we.exercise.name, SUM(we.sets * we.reps * we.weight)) " +
+    @Query("SELECT new com.viceda_s.workout_tracker_api.workout.dto.ExerciseVolumeSummary(we.exercise.name, SUM(we.sets * we.reps * we.weight)) " +
            "FROM WorkoutExercise we " +
            "WHERE we.workoutPlan.owner = :owner " +
            "AND we.workoutPlan.status = 'COMPLETED' " +

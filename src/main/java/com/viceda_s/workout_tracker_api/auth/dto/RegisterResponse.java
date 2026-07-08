@@ -1,4 +1,4 @@
-package com.viceda_s.workout_tracker_api.auth;
+package com.viceda_s.workout_tracker_api.auth.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
