@@ -52,6 +52,11 @@ public class AuthServiceTest {
     void registerNewEmail_SavesHashedPassword() {
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("plainPassword123")).thenReturn("hashed-value");
+        when(userRepository.saveAndFlush(any(User.class))).thenAnswer(invocation -> {
+            User u = invocation.getArgument(0);
+            u.setId(99L);
+            return u;
+        });
 
         RegisterRequest request = new RegisterRequest();
         request.setEmail("test@example.com");

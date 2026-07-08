@@ -20,8 +20,10 @@ import com.viceda_s.workout_tracker_api.workout.dto.ExerciseVolumeSummary;
 import com.viceda_s.workout_tracker_api.workout.dto.ProgressReportResponse;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class WorkoutService {
@@ -72,6 +74,7 @@ public class WorkoutService {
 
         plan.setExercises(buildWorkoutExercises(plan, request.getExercises()));
 
+        log.info("Workout plan '{}' created for user ID: {}", request.getName(), owner.getId());
         return workoutPlanRepository.save(plan);
     }
 
@@ -116,6 +119,7 @@ public class WorkoutService {
         WorkoutPlan plan = requireOwnedWorkout(ownerEmail, id);
         plan.setStatus(newStatus);
 
+        log.info("Workout plan {} status updated to {} for user ID: {}", id, newStatus, plan.getOwner().getId());
         return workoutPlanRepository.save(plan);
     }
 

@@ -14,8 +14,10 @@ import com.viceda_s.workout_tracker_api.user.User;
 import com.viceda_s.workout_tracker_api.user.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class AuthService {
@@ -35,7 +37,9 @@ public class AuthService {
         newUser.setName(request.getName());
 
         try {
-            return userRepository.saveAndFlush(newUser);
+            User savedUser = userRepository.saveAndFlush(newUser);
+            log.info("New User registered successfully with ID: {}", savedUser.getId());
+            return savedUser;
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
         }
