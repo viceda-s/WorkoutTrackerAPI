@@ -19,7 +19,8 @@ public class JwtService {
     @Value("${jwt.secret}")
     private final String jwtSecret;
 
-    private static final long EXPIRATION_MS = 1000 * 60 * 60;
+    @Value("${jwt.expiration-ms}")
+    private final long expirationMs;
 
     private SecretKey getSigningKey() {
         byte[] secretBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
@@ -30,7 +31,7 @@ public class JwtService {
         return Jwts.builder()
                 .subject(email)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
+                .expiration(new Date(System.currentTimeMillis() + expirationMs))
                 . signWith(getSigningKey())
                 .compact();
     }

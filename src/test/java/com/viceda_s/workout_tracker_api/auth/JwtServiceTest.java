@@ -11,7 +11,7 @@ import io.jsonwebtoken.JwtException;
  * and rejection of invalid tokens.
  */
 public class JwtServiceTest {
-    private final JwtService jwtService = new JwtService("some-32+-char-test-secret-value-here");
+    private final JwtService jwtService = new JwtService("some-32+-char-test-secret-value-here", 3600000L);
    
     /**
      * A token generated for a given email should, when parsed back,

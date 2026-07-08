@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 
 @Data
@@ -33,14 +35,17 @@ public class CreateWorkoutRequest {
         private Long exerciseId;
 
         @NotNull
+        @Positive
         @Schema(example = "4")
         private Integer sets;
 
         @NotNull
+        @Positive
         @Schema(example = "8")
         private Integer reps;
         
         @NotNull
+        @PositiveOrZero
         @Schema(example = "60.0")
         private BigDecimal weight;
     }

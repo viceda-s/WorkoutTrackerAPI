@@ -1,9 +1,5 @@
 package com.viceda_s.workout_tracker_api.auth;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,6 +16,9 @@ import com.viceda_s.workout_tracker_api.auth.dto.RegisterRequest;
 import com.viceda_s.workout_tracker_api.auth.dto.RegisterResponse;
 import com.viceda_s.workout_tracker_api.user.User;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -51,6 +50,9 @@ public class AuthController {
         return authService.login(request);
     }
 
+    @Operation(summary = "Get the current authenticated user", description = "Returns the email of the user identified by the bearer token.")
+    @ApiResponse(responseCode = "200", description = "Email returned")
+    @ApiResponse(responseCode = "401", description = "Missing or invalid token")
     @GetMapping("/me")
     public String me(@AuthenticationPrincipal UserDetails userDetails) {
         return userDetails.getUsername();
