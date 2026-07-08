@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -30,7 +31,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @ExtendWith(MockitoExtension.class)
-public class RateLimitFilterTest {
+public class IpRateLimitFilterTest {
 
     @Mock
     private RateLimitService rateLimitService;
@@ -50,11 +51,14 @@ public class RateLimitFilterTest {
     @Mock
     private SecurityContext securityContext;
 
+    @Mock
+    private Authentication authentication;
+
     @Spy
     private ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     @InjectMocks
-    private RateLimitFilter rateLimitFilter;
+    private IpRateLimitFilter ipRateLimitFilter;
 
     @BeforeEach
     void setUp() {
@@ -74,7 +78,6 @@ public class RateLimitFilterTest {
     @Test
     void doFilterInternal_Unauthenticated_NoTokens_Returns429()
             throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(null);
         when(request.getRemoteAddr()).thenReturn("192.168.1.1");
         when(rateLimitService.resolveBucketForIp("192.168.1.1")).thenReturn(bucket);
 
@@ -83,7 +86,7 @@ public class RateLimitFilterTest {
         ServletOutputStream outputStream = mock(ServletOutputStream.class);
         when(response.getOutputStream()).thenReturn(outputStream);
 
-        rateLimitFilter.doFilterInternal(request, response, filterChain);
+        ipRateLimitFilter.doFilterInternal(request, response, filterChain);
 
         verify(response).setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
         verify(response).setContentType("application/json");
@@ -97,14 +100,30 @@ public class RateLimitFilterTest {
     @Test
     void doFilterInternal_Unauthenticated_HasTokens_Proceeds()
             throws ServletException, IOException {
-        when(securityContext.getAuthentication()).thenReturn(null);
         when(request.getRemoteAddr()).thenReturn("192.168.1.1");
         when(rateLimitService.resolveBucketForIp("192.168.1.1")).thenReturn(bucket);
 
         when(bucket.tryConsume(1)).thenReturn(true);
 
-        rateLimitFilter.doFilterInternal(request, response, filterChain);
+        ipRateLimitFilter.doFilterInternal(request, response, filterChain);
 
+        verify(filterChain).doFilter(request, response);
+        verify(response, never()).setStatus(any(Integer.class));
+    }
+
+    /**
+     * An authenticated request should skip the IP rate limit entirely,
+     * relying on UserRateLimitFilter instead.
+     */
+    @Test
+    void doFilterInternal_Authenticated_SkipsIpRateLimit()
+            throws ServletException, IOException {
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(true);
+
+        ipRateLimitFilter.doFilterInternal(request, response, filterChain);
+
+        verify(rateLimitService, never()).resolveBucketForIp(any());
         verify(filterChain).doFilter(request, response);
         verify(response, never()).setStatus(any(Integer.class));
     }

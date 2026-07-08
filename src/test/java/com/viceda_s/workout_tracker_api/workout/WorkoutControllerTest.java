@@ -27,11 +27,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viceda_s.workout_tracker_api.auth.CustomUserDetailsService;
 import com.viceda_s.workout_tracker_api.auth.JwtService;
+import com.viceda_s.workout_tracker_api.config.RateLimitService;
 import com.viceda_s.workout_tracker_api.config.SecurityConfig;
 import com.viceda_s.workout_tracker_api.workout.dto.CreateWorkoutRequest;
 
 @WebMvcTest(WorkoutController.class)
-@Import(SecurityConfig.class)
+@Import({ SecurityConfig.class, RateLimitService.class })
 public class WorkoutControllerTest {
 
     @Autowired
@@ -77,8 +78,8 @@ public class WorkoutControllerTest {
         request.setExercises(List.of());
 
         mockMvc.perform(post("/api/workouts")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -100,9 +101,9 @@ public class WorkoutControllerTest {
         when(workoutService.createWorkout(eq("vince@example.com"), any())).thenReturn(buildWorkoutPlan());
 
         mockMvc.perform(post("/api/workouts")
-                        .header("Authorization", "Bearer validtoken")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .header("Authorization", "Bearer validtoken")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Push Day"))
                 .andExpect(jsonPath("$.status").value("PLANNED"));

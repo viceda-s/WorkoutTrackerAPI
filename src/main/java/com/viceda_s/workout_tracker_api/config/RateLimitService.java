@@ -15,19 +15,30 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class RateLimitService {
 
-    @Value("${rate.limit.ip.capacity}")
-    private int ipCapacity;
+    private final int ipCapacity;
+    private final int userCapacity;
+    private final Cache<String, Bucket> ipBuckets;
+    private final Cache<String, Bucket> userBuckets;
 
-    @Value("${rate.limit.user.capacity}")
-    private int userCapacity;
+    public RateLimitService(
+            @Value("${rate.limit.ip.capacity}") int ipCapacity,
+            @Value("${rate.limit.user.capacity}") int userCapacity,
+            @Value("${rate.limit.cache.max-size}") int cacheMaxSize) {
 
-    private final Cache<String, Bucket> ipBuckets = Caffeine.newBuilder()
-            .expireAfterAccess(1, TimeUnit.HOURS)
-            .build();
+        this.ipCapacity = ipCapacity;
+        this.userCapacity = userCapacity;
 
-    private final Cache<String, Bucket> userBuckets = Caffeine.newBuilder()
-            .expireAfterAccess(1, TimeUnit.HOURS)
-            .build();
+        this.ipBuckets = Caffeine.newBuilder()
+                .maximumSize(cacheMaxSize)
+                .expireAfterAccess(1, TimeUnit.HOURS)
+                .build();
+
+        this.userBuckets = Caffeine.newBuilder()
+                .maximumSize(cacheMaxSize)
+                .expireAfterAccess(1, TimeUnit.HOURS)
+                .build();
+
+    }
 
     public Bucket resolveBucketForIp(String ip) {
         return ipBuckets.get(ip, this::newIpBucket);

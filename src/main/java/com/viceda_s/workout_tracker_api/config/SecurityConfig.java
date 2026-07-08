@@ -18,11 +18,12 @@ import com.viceda_s.workout_tracker_api.auth.JwtAuthFilter;
 public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter,
-            RateLimitFilter rateLimitFilter) throws Exception {
+            UserRateLimitFilter userRateLimitFilter, IpRateLimitFilter ipRateLimitFilter) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(rateLimitFilter, JwtAuthFilter.class)
+                .addFilterAfter(ipRateLimitFilter, JwtAuthFilter.class)
+                .addFilterAfter(userRateLimitFilter, IpRateLimitFilter.class)
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
