@@ -26,7 +26,7 @@ The project is deliberately built with **professional-grade habits** rather than
 
 **Implemented**
 - ✅ **User registration** with BCrypt password hashing and duplicate-email rejection
-- ✅ **JWT-based authentication** — stateless login issuing a signed bearer token
+- ✅ **JWT-based authentication** — stateless login issuing a signed bearer token, with a configurable expiry (`jwt.expiration-ms`)
 - ✅ **Protected routes** via a custom Spring Security filter chain (`JwtAuthFilter`)
 - ✅ **Exercise library** — browse all exercises, or filter by `exerciseType` (`STRENGTH`, `CARDIO`, `FLEXIBILITY`) or `muscleGroup` (`CHEST`, `BACK`, `LEGS`, `SHOULDERS`, `ARMS`, `CORE`)
 - ✅ **Workout plan creation & listing** — authenticated users can build a plan from exercises with sets/reps/weight, and list their own plans (optionally filtered by `status`), always scoped to the requesting user
@@ -36,6 +36,7 @@ The project is deliberately built with **professional-grade habits** rather than
 - ✅ **Unit test coverage** on the service layer (JUnit 5 + Mockito) for exercises, auth, and workouts
 - ✅ **Interactive API documentation** — every endpoint annotated via springdoc-openapi with realistic request/response examples, browsable through Swagger UI
 - ✅ **Continuous Integration** — GitHub Actions runs the full test suite, including the Spring context and a real Postgres service container, on every push and pull request to `main`
+- ✅ **Consistent error responses** — a global exception handler (`GlobalExceptionHandler`) returns a uniform `{timestamp, status, error}` JSON body for every error, with a `fieldErrors` breakdown for validation failures, instead of leaking a stack trace or Spring's default error page
 
 ## Prerequisites
 
@@ -251,6 +252,27 @@ curl "http://localhost:8080/api/workouts/reports?from=2026-07-01T00:00:00Z&to=20
 ```
 
 `from` and `to` are required ISO-8601 timestamps. Only `COMPLETED` plans scheduled within that range count — `PLANNED` and `CANCELED` plans are excluded, and volume is summed per exercise as `sets × reps × weight`.
+
+### Error responses
+
+Every error — whether a business rule rejection (`404`, `409`, `401`, ...) or a request validation failure — comes back as a consistent JSON body rather than a raw stack trace or Spring's default error page.
+
+A business-rule error (e.g. requesting a workout that isn't yours):
+
+```json
+{ "timestamp": "2026-07-08T10:16:00.456789Z", "status": 404, "error": "Workout not found" }
+```
+
+A validation failure (e.g. registering with a blank name) additionally includes a per-field breakdown:
+
+```json
+{
+  "timestamp": "2026-07-08T10:15:30.123456Z",
+  "status": 400,
+  "error": "Validation failed",
+  "fieldErrors": { "name": "must not be blank" }
+}
+```
 
 ### Running tests
 
