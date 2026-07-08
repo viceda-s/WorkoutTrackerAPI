@@ -9,7 +9,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Status](https://img.shields.io/badge/status-in%20development-yellow?style=for-the-badge)
 ![Version](https://img.shields.io/badge/version-0.0.1--SNAPSHOT-blue?style=for-the-badge)
-![License](https://img.shields.io/badge/license-unlicensed-lightgrey?style=for-the-badge)
+![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 [![CI](https://img.shields.io/github/actions/workflow/status/viceda-s/WorkoutTrackerAPI/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/viceda-s/WorkoutTrackerAPI/actions/workflows/ci.yml)
 
 </div>
@@ -278,4 +278,4 @@ This started as a personal learning project, but suggestions, bug reports, and p
 
 ## License
 
-This project does not yet have a license file, so all rights are reserved by default. If you plan to reuse or fork this code, please open an issue to ask about terms. A permissive license such as [MIT](https://choosealicense.com/licenses/mit/) is a common choice for portfolio/learning projects like this one — once selected, it will be added here and as a `LICENSE` file at the repository root.
+This project is licensed under the [MIT License](LICENSE) — see the `LICENSE` file at the repository root for the full text.
