@@ -10,10 +10,10 @@ public class LoginRequest {
 
     @NotBlank
     @Email
-    @Schema(example="tua_prima@example.com")
+    @Schema(example="vince@example.com")
     private String email;
 
     @NotBlank
-    @Schema(example="aTuaPrimaDe4")
+    @Schema(example="SecurePass123")
     private String password;
 }

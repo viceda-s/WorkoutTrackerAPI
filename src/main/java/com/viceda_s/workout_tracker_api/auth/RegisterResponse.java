@@ -1,7 +1,6 @@
 package com.viceda_s.workout_tracker_api.auth;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -12,9 +11,9 @@ public class RegisterResponse {
     @Schema(example="1")
     private Long id;
 
-    @Schema(example="tua_prima@example.com")
+    @Schema(example="vince@example.com")
     private String email;
 
-    @Schema(example="Tua Prima")
+    @Schema(example="Vince")
     private String name;
 }

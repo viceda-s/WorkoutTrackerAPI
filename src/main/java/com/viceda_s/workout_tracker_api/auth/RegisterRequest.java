@@ -1,9 +1,9 @@
 package com.viceda_s.workout_tracker_api.auth;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
@@ -11,14 +11,15 @@ public class RegisterRequest {
     
     @NotBlank
     @Email
-    @Schema(example="tua_prima@example.com")
+    @Schema(example="vince@example.com")
     private String email;
 
     @NotBlank
-    @Schema(example="aTuaPrimaDe4")
+    @Size(min=8, message="Password must be at least 8 characters")
+    @Schema(example="SecurePass123")
     private String password;
 
     @NotBlank
-    @Schema(example="Tua Prima")
+    @Schema(example="Vince")
     private String name;
 }

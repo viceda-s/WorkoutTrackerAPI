@@ -74,15 +74,15 @@ public class WorkoutServiceTest {
     @Test
     void createWorkout_SavesWithCorrectOwnerAndExercise() {
         User owner = new User();
-        owner.setEmail("alice@example.com");
+        owner.setEmail("vince@example.com");
 
         Exercise exercise = new Exercise();
         exercise.setId(10L);
 
-        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(userRepository.findByEmail("vince@example.com")).thenReturn(Optional.of(owner));
         when(exerciseRepository.findById(10L)).thenReturn(Optional.of(exercise));
         
-        workoutService.createWorkout("alice@example.com", buildRequest(10L));
+        workoutService.createWorkout("vince@example.com", buildRequest(10L));
 
         ArgumentCaptor<WorkoutPlan> captor = ArgumentCaptor.forClass(WorkoutPlan.class);
         verify(workoutPlanRepository).save(captor.capture());
@@ -101,13 +101,13 @@ public class WorkoutServiceTest {
     @Test
     void createWorkout_UnknownExerciseId_ThrowsAndNeverSaves() {
         User owner = new User();
-        owner.setEmail("alice@example.com");
+        owner.setEmail("vince@example.com");
 
-        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(userRepository.findByEmail("vince@example.com")).thenReturn(Optional.of(owner));
         when(exerciseRepository.findById(999L)).thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-            () -> workoutService.createWorkout("alice@example.com", buildRequest(999L)));
+            () -> workoutService.createWorkout("vince@example.com", buildRequest(999L)));
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
         verify(workoutPlanRepository, never()).save(any());
     }
@@ -119,11 +119,11 @@ public class WorkoutServiceTest {
     @Test
     void listWorkouts_NoStatus_CallsFindByOwnerOnly() {
         User owner = new User();
-        owner.setEmail("alice@example.com");
+        owner.setEmail("vince@example.com");
 
-        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(userRepository.findByEmail("vince@example.com")).thenReturn(Optional.of(owner));
 
-        workoutService.listWorkouts("alice@example.com", null);
+        workoutService.listWorkouts("vince@example.com", null);
 
         verify(workoutPlanRepository).findByOwnerOrderByScheduledAtAsc(owner);
         verify(workoutPlanRepository, never()).findByOwnerAndStatusOrderByScheduledAtAsc(any(), any());
@@ -136,11 +136,11 @@ public class WorkoutServiceTest {
     @Test
     void listWorkouts_WithStatus_CallsFindByOwnerAndStatus() {
         User owner = new User();
-        owner.setEmail("alice@example.com");
+        owner.setEmail("vince@example.com");
 
-        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(userRepository.findByEmail("vince@example.com")).thenReturn(Optional.of(owner));
 
-        workoutService.listWorkouts("alice@example.com", WorkoutStatus.PLANNED);
+        workoutService.listWorkouts("vince@example.com", WorkoutStatus.PLANNED);
 
         verify(workoutPlanRepository).findByOwnerAndStatusOrderByScheduledAtAsc(owner, WorkoutStatus.PLANNED);
         verify(workoutPlanRepository, never()).findByOwnerOrderByScheduledAtAsc(any());
@@ -154,13 +154,13 @@ public class WorkoutServiceTest {
     @Test
     void getWorkoutById_NotOwned_ThrowsNotFound() {
         User owner = new User();
-        owner.setEmail("alice@example.com");
+        owner.setEmail("vince@example.com");
 
-        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(userRepository.findByEmail("vince@example.com")).thenReturn(Optional.of(owner));
         when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-            () -> workoutService.getWorkoutById("alice@example.com", 1L));
+            () -> workoutService.getWorkoutById("vince@example.com", 1L));
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     }
 
@@ -171,13 +171,13 @@ public class WorkoutServiceTest {
     @Test
     void updateWorkout_NotOwned_ThrowsNotFound() {
         User owner = new User();
-        owner.setEmail("alice@example.com");
+        owner.setEmail("vince@example.com");
 
-        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(userRepository.findByEmail("vince@example.com")).thenReturn(Optional.of(owner));
         when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.empty());
 
         assertThrows(ResponseStatusException.class, () 
-                -> workoutService.updateWorkout("alice@example.com", 1L, buildRequest(10L)));
+                -> workoutService.updateWorkout("vince@example.com", 1L, buildRequest(10L)));
     }
 
     /**
@@ -188,13 +188,13 @@ public class WorkoutServiceTest {
     @Test
     void deleteWorkout_NotOwned_ThrowsNotFound() {
         User owner = new User();
-        owner.setEmail("alice@example.com");
+        owner.setEmail("vince@example.com");
 
-        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(userRepository.findByEmail("vince@example.com")).thenReturn(Optional.of(owner));
         when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.empty());
 
         assertThrows(ResponseStatusException.class, ()
-                -> workoutService.deleteWorkout("alice@example.com", 1L));
+                -> workoutService.deleteWorkout("vince@example.com", 1L));
         verify(workoutPlanRepository, never()).delete(any());
     }
 
@@ -205,7 +205,7 @@ public class WorkoutServiceTest {
     @Test
     void updateWorkout_ReplacesExercisesNotAppends() {
         User owner = new User();
-        owner.setEmail("alice@example.com");
+        owner.setEmail("vince@example.com");
 
         Exercise oldExercise = new Exercise();
         oldExercise.setId(10L);
@@ -219,11 +219,11 @@ public class WorkoutServiceTest {
         Exercise newExercise = new Exercise();
         newExercise.setId(20L);
 
-        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(userRepository.findByEmail("vince@example.com")).thenReturn(Optional.of(owner));
         when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(existingPlan));
         when(exerciseRepository.findById(20L)).thenReturn(Optional.of(newExercise));
 
-        workoutService.updateWorkout("alice@example.com", 1L, buildRequest(20L));
+        workoutService.updateWorkout("vince@example.com", 1L, buildRequest(20L));
         
         assertEquals(1, existingPlan.getExercises().size());
         assertEquals(newExercise, existingPlan.getExercises().get(0).getExercise());
@@ -237,20 +237,20 @@ public class WorkoutServiceTest {
     @Test
     void generateProgressReport_AssemblesCountAndVolumes() {
         User owner = new User();
-        owner.setEmail("alice@example.com");
+        owner.setEmail("vince@example.com");
 
         Instant from = Instant.parse("2026-01-01T00:00:00Z");
         Instant to = Instant.parse("2026-01-31T00:00:00Z");
 
         List<ExerciseVolumeSummary> volumes = List.of(new ExerciseVolumeSummary("Bench Press", new BigDecimal("700.0")));
 
-        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(userRepository.findByEmail("vince@example.com")).thenReturn(Optional.of(owner));
         when(workoutPlanRepository.countByOwnerAndStatusAndScheduledAtBetween(owner, WorkoutStatus.COMPLETED, from, to))
                 .thenReturn(2L);
         when(workoutExerciseRepository.summarizeVolumeByOwnerAndPeriod(owner, from, to))
                 .thenReturn(volumes);
         
-        ProgressReportResponse report = workoutService.generateProgressReport("alice@example.com", from, to);
+        ProgressReportResponse report = workoutService.generateProgressReport("vince@example.com", from, to);
         assertEquals(2L, report.getTotalCompletedWorkouts());
         assertEquals(volumes, report.getExerciseVolumes());
     }
@@ -262,18 +262,18 @@ public class WorkoutServiceTest {
     @Test
     void generateProgressReport_CountsOnlyCompletedStatus() {
         User owner = new User();
-        owner.setEmail("alice@example.com");
+        owner.setEmail("vince@example.com");
 
         Instant from = Instant.parse("2026-01-01T00:00:00Z");
         Instant to = Instant.parse("2026-01-31T00:00:00Z");
 
-        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(userRepository.findByEmail("vince@example.com")).thenReturn(Optional.of(owner));
         when(workoutPlanRepository.countByOwnerAndStatusAndScheduledAtBetween(any(), any(), any(), any()))
                 .thenReturn(0L);
         when(workoutExerciseRepository.summarizeVolumeByOwnerAndPeriod(any(), any(), any()))
                 .thenReturn(List.of());
         
-        workoutService.generateProgressReport("alice@example.com", from, to);
+        workoutService.generateProgressReport("vince@example.com", from, to);
 
         verify(workoutPlanRepository).countByOwnerAndStatusAndScheduledAtBetween(owner, WorkoutStatus.COMPLETED, from, to);
     }
@@ -285,16 +285,16 @@ public class WorkoutServiceTest {
     @Test
     void updateStatus_ChangesAndSaves() {
         User owner = new User();
-        owner.setEmail("alice@example.com");
+        owner.setEmail("vince@example.com");
 
         WorkoutPlan plan = new WorkoutPlan();
         plan.setOwner(owner);
         plan.setStatus(WorkoutStatus.PLANNED);
 
-        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(userRepository.findByEmail("vince@example.com")).thenReturn(Optional.of(owner));
         when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(plan));
 
-        workoutService.updateStatus("alice@example.com", 1L, WorkoutStatus.COMPLETED);
+        workoutService.updateStatus("vince@example.com", 1L, WorkoutStatus.COMPLETED);
 
         assertEquals(WorkoutStatus.COMPLETED, plan.getStatus());
         verify(workoutPlanRepository).save(plan);
@@ -307,13 +307,13 @@ public class WorkoutServiceTest {
     @Test
     void updateStatus_NotOwned_ThrowsNotFound() {
         User owner = new User();
-        owner.setEmail("alice@example.com");
+        owner.setEmail("vince@example.com");
 
-        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.of(owner));
+        when(userRepository.findByEmail("vince@example.com")).thenReturn(Optional.of(owner));
         when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.empty());
 
         assertThrows(ResponseStatusException.class,
-                () -> workoutService.updateStatus("alice@example.com", 1L, WorkoutStatus.COMPLETED));
+                () -> workoutService.updateStatus("vince@example.com", 1L, WorkoutStatus.COMPLETED));
     }
 
 }
