@@ -41,7 +41,7 @@ import com.viceda_s.workout_tracker_api.workout.dto.ProgressReportResponse;
  */
 @ExtendWith(MockitoExtension.class)
 public class WorkoutServiceTest {
-    
+
     @Mock
     private WorkoutPlanRepository workoutPlanRepository;
 
@@ -84,8 +84,8 @@ public class WorkoutServiceTest {
         exercise.setId(10L);
 
         when(userService.getByEmailOrThrow("vince@example.com")).thenReturn(owner);
-        when(exerciseRepository.findById(10L)).thenReturn(Optional.of(exercise));
-        
+        when(exerciseRepository.findAllById(any())).thenReturn(List.of(exercise));
+
         workoutService.createWorkout("vince@example.com", buildRequest(10L));
 
         ArgumentCaptor<WorkoutPlan> captor = ArgumentCaptor.forClass(WorkoutPlan.class);
@@ -108,10 +108,10 @@ public class WorkoutServiceTest {
         owner.setEmail("vince@example.com");
 
         when(userService.getByEmailOrThrow("vince@example.com")).thenReturn(owner);
-        when(exerciseRepository.findById(999L)).thenReturn(Optional.empty());
+        when(exerciseRepository.findAllById(any())).thenReturn(List.of());
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-            () -> workoutService.createWorkout("vince@example.com", buildRequest(999L)));
+                () -> workoutService.createWorkout("vince@example.com", buildRequest(999L)));
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
         verify(workoutPlanRepository, never()).save(any());
     }
@@ -154,7 +154,7 @@ public class WorkoutServiceTest {
      * Fetching a workout that doesn't belong to the caller (or doesn't exist
      * at all) should be rejected with a 404, not distinguishing between the
      * two cases.
-    */
+     */
     @Test
     void getWorkoutById_NotOwned_ThrowsNotFound() {
         User owner = new User();
@@ -164,7 +164,7 @@ public class WorkoutServiceTest {
         when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-            () -> workoutService.getWorkoutById("vince@example.com", 1L));
+                () -> workoutService.getWorkoutById("vince@example.com", 1L));
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     }
 
@@ -181,7 +181,7 @@ public class WorkoutServiceTest {
         when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-            () -> workoutService.updateWorkout("vince@example.com", 1L, buildRequest(10L)));
+                () -> workoutService.updateWorkout("vince@example.com", 1L, buildRequest(10L)));
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     }
 
@@ -199,7 +199,7 @@ public class WorkoutServiceTest {
         when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-            () -> workoutService.deleteWorkout("vince@example.com", 1L));
+                () -> workoutService.deleteWorkout("vince@example.com", 1L));
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
         verify(workoutPlanRepository, never()).delete(any());
     }
@@ -227,10 +227,10 @@ public class WorkoutServiceTest {
 
         when(userService.getByEmailOrThrow("vince@example.com")).thenReturn(owner);
         when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(existingPlan));
-        when(exerciseRepository.findById(20L)).thenReturn(Optional.of(newExercise));
+        when(exerciseRepository.findAllById(any())).thenReturn(List.of(newExercise));
 
         workoutService.updateWorkout("vince@example.com", 1L, buildRequest(20L));
-        
+
         assertEquals(1, existingPlan.getExercises().size());
         assertEquals(newExercise, existingPlan.getExercises().get(0).getExercise());
     }
@@ -248,14 +248,15 @@ public class WorkoutServiceTest {
         Instant from = Instant.parse("2026-01-01T00:00:00Z");
         Instant to = Instant.parse("2026-01-31T00:00:00Z");
 
-        List<ExerciseVolumeSummary> volumes = List.of(new ExerciseVolumeSummary("Bench Press", new BigDecimal("700.0")));
+        List<ExerciseVolumeSummary> volumes = List
+                .of(new ExerciseVolumeSummary("Bench Press", new BigDecimal("700.0")));
 
         when(userService.getByEmailOrThrow("vince@example.com")).thenReturn(owner);
         when(workoutPlanRepository.countByOwnerAndStatusAndScheduledAtBetween(owner, WorkoutStatus.COMPLETED, from, to))
                 .thenReturn(2L);
         when(workoutExerciseRepository.summarizeVolumeByOwnerAndPeriod(owner, from, to))
                 .thenReturn(volumes);
-        
+
         ProgressReportResponse report = workoutService.generateProgressReport("vince@example.com", from, to);
         assertEquals(2L, report.getTotalCompletedWorkouts());
         assertEquals(volumes, report.getExerciseVolumes());
@@ -278,10 +279,11 @@ public class WorkoutServiceTest {
                 .thenReturn(0L);
         when(workoutExerciseRepository.summarizeVolumeByOwnerAndPeriod(any(), any(), any()))
                 .thenReturn(List.of());
-        
+
         workoutService.generateProgressReport("vince@example.com", from, to);
 
-        verify(workoutPlanRepository).countByOwnerAndStatusAndScheduledAtBetween(owner, WorkoutStatus.COMPLETED, from, to);
+        verify(workoutPlanRepository).countByOwnerAndStatusAndScheduledAtBetween(owner, WorkoutStatus.COMPLETED, from,
+                to);
     }
 
     /**
@@ -319,7 +321,7 @@ public class WorkoutServiceTest {
         when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-            () -> workoutService.updateStatus("vince@example.com", 1L, WorkoutStatus.COMPLETED));
+                () -> workoutService.updateStatus("vince@example.com", 1L, WorkoutStatus.COMPLETED));
         assertNotNull(exception);
     }
 

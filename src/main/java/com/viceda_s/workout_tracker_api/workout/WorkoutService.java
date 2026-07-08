@@ -3,9 +3,12 @@ package com.viceda_s.workout_tracker_api.workout;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.viceda_s.workout_tracker_api.exercise.Exercise;
@@ -19,20 +22,30 @@ import com.viceda_s.workout_tracker_api.workout.dto.ProgressReportResponse;
 import lombok.RequiredArgsConstructor;
 
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class WorkoutService {
-    
+
     private final WorkoutPlanRepository workoutPlanRepository;
     private final WorkoutExerciseRepository workoutExerciseRepository;
     private final ExerciseRepository exerciseRepository;
     private final UserService userService;
 
-    private List<WorkoutExercise> buildWorkoutExercises(WorkoutPlan plan, List<CreateWorkoutRequest.ExerciseLine> lines) {
+    private List<WorkoutExercise> buildWorkoutExercises(WorkoutPlan plan,
+            List<CreateWorkoutRequest.ExerciseLine> lines) {
+        List<Long> exerciseIds = lines.stream().map(CreateWorkoutRequest.ExerciseLine::getExerciseId).toList();
+
+        Map<Long, Exercise> exerciseMap = exerciseRepository.findAllById(exerciseIds).stream()
+                .collect(Collectors.toMap(Exercise::getId, e -> e));
+
         List<WorkoutExercise> exercises = new ArrayList<>();
         int orderIndex = 0;
         for (CreateWorkoutRequest.ExerciseLine line : lines) {
-            Exercise exercise = exerciseRepository.findById(line.getExerciseId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown exercise id: " + line.getExerciseId()));
+            Exercise exercise = exerciseMap.get(line.getExerciseId());
+            if (exercise == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Unknown exercise id: " + line.getExerciseId());
+            }
 
             WorkoutExercise we = new WorkoutExercise();
             we.setWorkoutPlan(plan);
@@ -47,9 +60,10 @@ public class WorkoutService {
         return exercises;
     }
 
+    @Transactional
     public WorkoutPlan createWorkout(String ownerEmail, CreateWorkoutRequest request) {
         User owner = userService.getByEmailOrThrow(ownerEmail);
-        
+
         WorkoutPlan plan = new WorkoutPlan();
         plan.setOwner(owner);
         plan.setName(request.getName());
@@ -63,7 +77,7 @@ public class WorkoutService {
 
     public List<WorkoutPlan> listWorkouts(String ownerEmail, WorkoutStatus status) {
         User owner = userService.getByEmailOrThrow(ownerEmail);
-        
+
         if (status == null) {
             return workoutPlanRepository.findByOwnerOrderByScheduledAtAsc(owner);
         } else {
@@ -111,7 +125,7 @@ public class WorkoutService {
         long totalCompleted = workoutPlanRepository.countByOwnerAndStatusAndScheduledAtBetween(
                 owner, WorkoutStatus.COMPLETED, from, to);
         List<ExerciseVolumeSummary> volumes = workoutExerciseRepository.summarizeVolumeByOwnerAndPeriod(
-            owner, from, to);
+                owner, from, to);
 
         return new ProgressReportResponse(totalCompleted, volumes);
     }
