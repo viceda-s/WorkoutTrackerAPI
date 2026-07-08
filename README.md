@@ -36,7 +36,8 @@ The project is deliberately built with **professional-grade habits** rather than
 - ✅ **Unit test coverage** on the service layer (JUnit 5 + Mockito) for exercises, auth, and workouts
 - ✅ **Interactive API documentation** — every endpoint annotated via springdoc-openapi with realistic request/response examples, browsable through Swagger UI
 - ✅ **Continuous Integration** — GitHub Actions runs the full test suite, including the Spring context and a real Postgres service container, on every push and pull request to `main`
-- ✅ **Consistent error responses** — a global exception handler (`GlobalExceptionHandler`) returns a uniform `{timestamp, status, error}` JSON body for every error, with a `fieldErrors` breakdown for validation failures, instead of leaking a stack trace or Spring's default error page
+- ✅ **Rate Limiting** — automated protection utilizing Bucket4j and Caffeine caching, with distinct limits for unauthenticated traffic (5 requests/minute by IP) and authenticated users (10 requests/minute by user identity)
+- ✅ **Consistent error responses** — a global exception handler (`GlobalExceptionHandler`) and rate limit filters return a uniform `{timestamp, status, error}` JSON body for every error, with a `fieldErrors` breakdown for validation failures, instead of leaking a stack trace or Spring's default error page
 
 ## Prerequisites
 
@@ -255,12 +256,18 @@ curl "http://localhost:8080/api/workouts/reports?from=2026-07-01T00:00:00Z&to=20
 
 ### Error responses
 
-Every error — whether a business rule rejection (`404`, `409`, `401`, ...) or a request validation failure — comes back as a consistent JSON body rather than a raw stack trace or Spring's default error page.
+Every error — whether a business rule rejection (`404`, `409`, `401`, `429`, ...) or a request validation failure — comes back as a consistent JSON body rather than a raw stack trace or Spring's default error page.
 
 A business-rule error (e.g. requesting a workout that isn't yours):
 
 ```json
 { "timestamp": "2026-07-08T10:16:00.456789Z", "status": 404, "error": "Workout not found" }
+```
+
+A rate limit error (`429 Too Many Requests`):
+
+```json
+{ "timestamp": "2026-07-08T10:17:00.123456Z", "status": 429, "error": "Too many requests" }
 ```
 
 A validation failure (e.g. registering with a blank name) additionally includes a per-field breakdown:
