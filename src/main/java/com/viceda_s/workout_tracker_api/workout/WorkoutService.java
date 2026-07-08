@@ -11,7 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.viceda_s.workout_tracker_api.exercise.Exercise;
 import com.viceda_s.workout_tracker_api.exercise.ExerciseRepository;
 import com.viceda_s.workout_tracker_api.user.User;
-import com.viceda_s.workout_tracker_api.user.UserRepository;
+import com.viceda_s.workout_tracker_api.user.UserService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,7 +22,7 @@ public class WorkoutService {
     private final WorkoutPlanRepository workoutPlanRepository;
     private final WorkoutExerciseRepository workoutExerciseRepository;
     private final ExerciseRepository exerciseRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     private List<WorkoutExercise> buildWorkoutExercises(WorkoutPlan plan, List<CreateWorkoutRequest.ExerciseLine> lines) {
         List<WorkoutExercise> exercises = new ArrayList<>();
@@ -45,8 +45,7 @@ public class WorkoutService {
     }
 
     public WorkoutPlan createWorkout(String ownerEmail, CreateWorkoutRequest request) {
-        User owner = userRepository.findByEmail(ownerEmail)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+        User owner = userService.getByEmailOrThrow(ownerEmail);
         
         WorkoutPlan plan = new WorkoutPlan();
         plan.setOwner(owner);
@@ -60,8 +59,7 @@ public class WorkoutService {
     }
 
     public List<WorkoutPlan> listWorkouts(String ownerEmail, WorkoutStatus status) {
-        User owner = userRepository.findByEmail(ownerEmail)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+        User owner = userService.getByEmailOrThrow(ownerEmail);
         
         if (status == null) {
             return workoutPlanRepository.findByOwnerOrderByScheduledAtAsc(owner);
@@ -71,8 +69,7 @@ public class WorkoutService {
     }
 
     private WorkoutPlan requireOwnedWorkout(String ownerEmail, Long id) {
-        User owner = userRepository.findByEmail(ownerEmail)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+        User owner = userService.getByEmailOrThrow(ownerEmail);
         return workoutPlanRepository.findByIdAndOwner(id, owner)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Workout not found"));
     }
@@ -106,8 +103,7 @@ public class WorkoutService {
     }
 
     public ProgressReportResponse generateProgressReport(String ownerEmail, Instant from, Instant to) {
-        User owner = userRepository.findByEmail(ownerEmail)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+        User owner = userService.getByEmailOrThrow(ownerEmail);
 
         long totalCompleted = workoutPlanRepository.countByOwnerAndStatusAndScheduledAtBetween(
                 owner, WorkoutStatus.COMPLETED, from, to);

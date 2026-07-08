@@ -79,9 +79,9 @@ public class AuthServiceTest {
         request.setEmail("test@example.com");
         request.setPassword("whatever");
         request.setName("Test");
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
             authService.register(request));
-        assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
         verify(userRepository, never()).save(any());
     }
 
@@ -124,9 +124,9 @@ public class AuthServiceTest {
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrongPassword", "hashed-value")).thenReturn(false);
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
                 () -> authService.login(request));
-        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
     }
 
     /**
@@ -141,9 +141,9 @@ public class AuthServiceTest {
 
         when(userRepository.findByEmail("nobody@example.com")).thenReturn(Optional.empty());
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
                 () -> authService.login(request));
-        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
     }
 
 }

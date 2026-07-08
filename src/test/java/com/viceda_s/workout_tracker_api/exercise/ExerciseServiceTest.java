@@ -49,10 +49,10 @@ public class ExerciseServiceTest {
     @Test
     void getExerciseById_NotFound_ThrowsException() {
         when(exerciseRepository.findById(99L)).thenReturn(Optional.empty());
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
             exerciseService.getExerciseById(99L);
         });
-        assertNotNull(ex);
+        assertNotNull(exception);
     }
     
     /**
