@@ -17,19 +17,21 @@ import com.viceda_s.workout_tracker_api.auth.JwtAuthFilter;
 @Configuration
 public class SecurityConfig {
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter,
+            RateLimitFilter rateLimitFilter) throws Exception {
         http.csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-            .exceptionHandling(handling -> handling.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.GET, "/api/exercises/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                .requestMatchers("/error").permitAll()
-                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .anyRequest().authenticated()
-        );
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(rateLimitFilter, JwtAuthFilter.class)
+                .exceptionHandling(handling -> handling
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, "/api/exercises/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .anyRequest().authenticated());
         return http.build();
     }
 
