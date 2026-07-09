@@ -38,7 +38,7 @@ The project is deliberately built with **professional-grade habits** rather than
 - ✅ **Continuous Integration** — GitHub Actions runs the full test suite, including the Spring context and a real Postgres service container, on every push and pull request to `main`
 - ✅ **Rate Limiting** — automated protection utilizing Bucket4j and Caffeine caching, with distinct limits for unauthenticated traffic (5 requests/minute by IP) and authenticated users (10 requests/minute by user identity)
 - ✅ **Consistent error responses** — a global exception handler (`GlobalExceptionHandler`) and rate limit filters return uniform RFC 7807 `ProblemDetail` JSON responses for every error, preventing stack trace leaks or Spring's default error page
-- ✅ **Production-Ready & Secure** — strict rate limits on public/authenticated traffic (immune to X-Forwarded-For spoofing), safe Actuator health probes, disabled Open-In-View (OSIV) for predictable database queries, and zero PII leakage in logs
+- ✅ **Production-Ready & Secure** — strict rate limits on public/authenticated traffic (immune to X-Forwarded-For spoofing when deployed behind a trusted proxy configured via Tomcat's `RemoteIpValve`), safe Actuator health probes, disabled Open-In-View (OSIV) for predictable database queries, and zero PII leakage in logs
 
 ## Prerequisites
 
