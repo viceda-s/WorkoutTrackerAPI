@@ -37,7 +37,8 @@ The project is deliberately built with **professional-grade habits** rather than
 - ✅ **Interactive API documentation** — every endpoint annotated via springdoc-openapi with realistic request/response examples, browsable through Swagger UI
 - ✅ **Continuous Integration** — GitHub Actions runs the full test suite, including the Spring context and a real Postgres service container, on every push and pull request to `main`
 - ✅ **Rate Limiting** — automated protection utilizing Bucket4j and Caffeine caching, with distinct limits for unauthenticated traffic (5 requests/minute by IP) and authenticated users (10 requests/minute by user identity)
-- ✅ **Consistent error responses** — a global exception handler (`GlobalExceptionHandler`) and rate limit filters return a uniform `{timestamp, status, error}` JSON body for every error, with a `fieldErrors` breakdown for validation failures, instead of leaking a stack trace or Spring's default error page
+- ✅ **Consistent error responses** — a global exception handler (`GlobalExceptionHandler`) and rate limit filters return uniform RFC 7807 `ProblemDetail` JSON responses for every error, preventing stack trace leaks or Spring's default error page
+- ✅ **Production-Ready & Secure** — strict rate limits on public/authenticated traffic (immune to X-Forwarded-For spoofing), safe Actuator health probes, disabled Open-In-View (OSIV) for predictable database queries, and zero PII leakage in logs
 
 ## Prerequisites
 
@@ -256,28 +257,46 @@ curl "http://localhost:8080/api/workouts/reports?from=2026-07-01T00:00:00Z&to=20
 
 ### Error responses
 
-Every error — whether a business rule rejection (`404`, `409`, `401`, `429`, ...) or a request validation failure — comes back as a consistent JSON body rather than a raw stack trace or Spring's default error page.
+Every error — whether a business rule rejection (`404`, `409`, `401`, `429`, ...) or a request validation failure — comes back as a consistent RFC 7807 `ProblemDetail` JSON response rather than a raw stack trace or Spring's default error page.
 
 A business-rule error (e.g. requesting a workout that isn't yours):
 
 ```json
-{ "timestamp": "2026-07-08T10:16:00.456789Z", "status": 404, "error": "Workout not found" }
+{
+  "type": "about:blank",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "Workout not found",
+  "instance": "/api/workouts/1"
+}
 ```
 
 A rate limit error (`429 Too Many Requests`):
 
 ```json
-{ "timestamp": "2026-07-08T10:17:00.123456Z", "status": 429, "error": "Too many requests" }
+{
+  "type": "about:blank",
+  "title": "Too Many Requests",
+  "status": 429,
+  "detail": "Too many requests",
+  "instance": "/api/workouts"
+}
 ```
 
-A validation failure (e.g. registering with a blank name) additionally includes a per-field breakdown:
+A validation failure (e.g. registering with a blank name) additionally includes a `properties` breakdown for field errors:
 
 ```json
 {
-  "timestamp": "2026-07-08T10:15:30.123456Z",
+  "type": "about:blank",
+  "title": "Bad Request",
   "status": 400,
-  "error": "Validation failed",
-  "fieldErrors": { "name": "must not be blank" }
+  "detail": "Validation failed",
+  "instance": "/api/auth/register",
+  "properties": {
+    "fieldErrors": {
+      "name": "must not be blank"
+    }
+  }
 }
 ```
 
