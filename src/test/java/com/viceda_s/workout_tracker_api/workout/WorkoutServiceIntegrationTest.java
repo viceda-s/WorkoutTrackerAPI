@@ -31,7 +31,7 @@ public class WorkoutServiceIntegrationTest extends BaseIntegrationTest {
     private ExerciseRepository exerciseRepository;
 
     @Test
-    void createWorkout_PersiststoRealDatabase() {
+    void createWorkout_PersistsToRealDatabase() {
         User user = new User();
         user.setEmail("integration@test.com");
         user.setName("Integration Tester");
@@ -42,7 +42,8 @@ public class WorkoutServiceIntegrationTest extends BaseIntegrationTest {
         exercise.setName("Deadlift");
         exercise.setType(ExerciseType.STRENGTH);
         exercise.setMuscleGroup(MuscleGroup.BACK);
-        exercise.setDescription("A compound weight training exercise where a loaded barbell is lifted off the ground to the level of the hips.");
+        exercise.setDescription(
+                "A compound weight training exercise where a loaded barbell is lifted off the ground to the level of the hips.");
         exercise = exerciseRepository.save(exercise);
 
         CreateWorkoutRequest.ExerciseLine line = new CreateWorkoutRequest.ExerciseLine();
