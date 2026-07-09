@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
@@ -51,7 +52,7 @@ public class AuthServiceRaceIntegrationTest extends BaseIntegrationTest {
                         conflictCount.incrementAndGet();
                     }
                 } catch (Exception e) {
-
+                    e.printStackTrace();
                 } finally {
                     doneLatch.countDown();
                 }
@@ -63,5 +64,8 @@ public class AuthServiceRaceIntegrationTest extends BaseIntegrationTest {
 
         assertEquals(1, createdCount.get());
         assertEquals(1, conflictCount.get());
+
+        executor.shutdown();
+        executor.awaitTermination(2, TimeUnit.SECONDS);
     }
 }

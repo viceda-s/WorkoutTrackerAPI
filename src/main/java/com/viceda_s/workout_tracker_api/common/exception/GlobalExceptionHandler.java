@@ -33,7 +33,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Email already in use");
         }
 
-        log.warn("Database constraint violation detected", exception);
+        log.warn("Database constraint violation detected: {}", exception.getMostSpecificCause().getClass().getName());
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
                 "Resource conflict: Data already in use");
     }
@@ -77,7 +77,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleUnexpectedException(Exception exception) {
-        log.error("Unexpected error occured: {}", exception.getClass().getSimpleName());
+        log.error("Unexpected error", exception);
         return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
     }
 }
