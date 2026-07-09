@@ -1,7 +1,5 @@
 package com.viceda_s.workout_tracker_api.common.exception;
 
-import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 

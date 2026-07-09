@@ -90,7 +90,7 @@ public class AuthServiceTest {
         ResponseStatusException exception = assertThrows(ResponseStatusException.class,
                 () -> authService.register(request));
         assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
-        verify(userRepository, never()).save(any());
+        verify(userRepository, never()).saveAndFlush(any());
     }
 
     /**
