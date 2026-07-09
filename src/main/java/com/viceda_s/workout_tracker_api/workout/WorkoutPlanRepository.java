@@ -15,9 +15,6 @@ public interface WorkoutPlanRepository extends JpaRepository<WorkoutPlan, Long> 
     List<WorkoutPlan> findByOwnerOrderByScheduledAtAsc(User owner);
 
     @EntityGraph(attributePaths = { "exercises", "exercises.exercise" })
-    Optional<WorkoutPlan> findById(Long id);
-
-    @EntityGraph(attributePaths = { "exercises", "exercises.exercise" })
     List<WorkoutPlan> findByOwnerAndStatusOrderByScheduledAtAsc(User owner, WorkoutStatus status);
 
     @EntityGraph(attributePaths = { "exercises", "exercises.exercise" })

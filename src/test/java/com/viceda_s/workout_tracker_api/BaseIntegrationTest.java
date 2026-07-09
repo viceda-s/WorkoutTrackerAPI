@@ -1,6 +1,9 @@
 package com.viceda_s.workout_tracker_api;
 
+import org.junit.jupiter.api.AfterEach;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -13,6 +16,14 @@ public abstract class BaseIntegrationTest {
             .withDatabaseName("workout_test_db")
             .withUsername("test")
             .withPassword("test");
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @AfterEach
+    void teardown() {
+        jdbcTemplate.execute("TRUNCATE TABLE workout_exercises, workout_plans, exercises, users CASCADE");
+    }
 
     static {
         POSTGRES.start();

@@ -1,11 +1,9 @@
 package com.viceda_s.workout_tracker_api.config;
 
 import java.io.IOException;
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,32 +32,24 @@ public class IpRateLimitFilter extends OncePerRequestFilter {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
-            String clientIp = getClientIp(request);
+            String clientIp = request.getRemoteAddr();
             Bucket bucket = rateLimitService.resolveBucketForIp(clientIp);
 
             if (!bucket.tryConsume(1)) {
+                ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS,
+                        "Too many requests");
                 response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
                 response.setContentType("application/json");
-
-                Map<String, Object> body = new HashMap<>();
-                body.put("timestamp", Instant.now());
-                body.put("status", HttpStatus.TOO_MANY_REQUESTS.value());
-                body.put("error", "Too many requests");
-
-                objectMapper.writeValue(response.getOutputStream(), body);
-
+                objectMapper.writeValue(response.getOutputStream(), problemDetail);
                 return;
             }
         }
+
         filterChain.doFilter(request, response);
     }
 
-    private String getClientIp(HttpServletRequest request) {
-        String xfHeader = request.getHeader("X-Forwarded-For");
-
-        if (xfHeader == null || xfHeader.isEmpty() || "unknown".equalsIgnoreCase(xfHeader)) {
-            return request.getRemoteAddr();
-        }
-        return xfHeader.split(",")[0].trim();
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return request.getRequestURI().startsWith("/actuator/");
     }
 }

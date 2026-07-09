@@ -48,8 +48,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     userDetails.getAuthorities());
 
             SecurityContextHolder.getContext().setAuthentication(authToken);
-        } catch (JwtException | UsernameNotFoundException e) {
-            log.warn("Invalid JWT Token or User not found: {}", e.getMessage());
+        } catch (JwtException | IllegalArgumentException | UsernameNotFoundException e) {
+            log.warn("Invalid JWT Token or User not found: {}", e.getClass().getSimpleName());
         }
 
         filterChain.doFilter(request, response);

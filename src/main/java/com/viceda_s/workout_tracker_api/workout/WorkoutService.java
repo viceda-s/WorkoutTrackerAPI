@@ -75,7 +75,7 @@ public class WorkoutService {
         plan.setExercises(buildWorkoutExercises(plan, request.getExercises()));
 
         WorkoutPlan savedPlan = workoutPlanRepository.save(plan);
-        log.info("Workout plan '{}' (ID: {}) created for user ID: {}", savedPlan.getName(), savedPlan.getId(), owner.getId());
+        log.info("Workout plan ID: {} created for user ID: {}", savedPlan.getId(), owner.getId());
         return savedPlan;
     }
 
@@ -124,7 +124,7 @@ public class WorkoutService {
         plan.setStatus(newStatus);
 
         WorkoutPlan savedPlan = workoutPlanRepository.save(plan);
-        log.info("Workout plan {} status updated to {} for user ID: {}", savedPlan.getId(), newStatus,
+        log.info("Workout plan ID: {} status updated to {} for user ID: {}", savedPlan.getId(), newStatus,
                 plan.getOwner().getId());
         return savedPlan;
     }

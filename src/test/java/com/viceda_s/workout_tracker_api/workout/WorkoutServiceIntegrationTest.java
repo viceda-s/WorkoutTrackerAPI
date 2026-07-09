@@ -60,8 +60,11 @@ public class WorkoutServiceIntegrationTest extends BaseIntegrationTest {
         WorkoutPlan savedPlan = workoutService.createWorkout("integration@test.com", request);
 
         assertNotNull(savedPlan.getId(), "The WorkoutPlan should have received a real ID from the DB");
-        assertEquals("Heavy Back Day", savedPlan.getName());
-        assertEquals(1, savedPlan.getExercises().size());
-        assertEquals("Deadlift", savedPlan.getExercises().get(0).getExercise().getName());
+
+        WorkoutPlan fetchedPlan = workoutService.getWorkoutById("integration@test.com", savedPlan.getId());
+
+        assertEquals("Heavy Back Day", fetchedPlan.getName());
+        assertEquals(1, fetchedPlan.getExercises().size());
+        assertEquals("Deadlift", fetchedPlan.getExercises().get(0).getExercise().getName());
     }
 }
