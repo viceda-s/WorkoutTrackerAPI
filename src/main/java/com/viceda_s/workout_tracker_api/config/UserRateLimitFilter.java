@@ -39,7 +39,7 @@ public class UserRateLimitFilter extends OncePerRequestFilter {
                 ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS,
                         "Too many requests");
                 response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-                response.setContentType("application/json");
+                response.setContentType("application/problem+json");
                 objectMapper.writeValue(response.getOutputStream(), problemDetail);
                 return;
             }

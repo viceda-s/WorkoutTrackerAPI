@@ -266,8 +266,7 @@ A business-rule error (e.g. requesting a workout that isn't yours):
   "type": "about:blank",
   "title": "Not Found",
   "status": 404,
-  "detail": "Workout not found",
-  "instance": "/api/workouts/1"
+  "detail": "Workout not found"
 }
 ```
 
@@ -278,8 +277,7 @@ A rate limit error (`429 Too Many Requests`):
   "type": "about:blank",
   "title": "Too Many Requests",
   "status": 429,
-  "detail": "Too many requests",
-  "instance": "/api/workouts"
+  "detail": "Too many requests"
 }
 ```
 
@@ -291,7 +289,6 @@ A validation failure (e.g. registering with a blank name) additionally includes 
   "title": "Bad Request",
   "status": 400,
   "detail": "Validation failed",
-  "instance": "/api/auth/register",
   "fieldErrors": {
     "name": "must not be blank"
   }

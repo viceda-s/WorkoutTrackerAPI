@@ -109,6 +109,7 @@ public class WorkoutService {
         plan.getExercises().clear();
         plan.getExercises().addAll(buildWorkoutExercises(plan, request.getExercises()));
 
+        log.info("Workout plan ID: {} updated for user ID: {}", plan.getId(), plan.getOwner().getId());
         return workoutPlanRepository.save(plan);
     }
 
@@ -116,6 +117,8 @@ public class WorkoutService {
     public void deleteWorkout(String ownerEmail, Long id) {
         WorkoutPlan plan = requireOwnedWorkout(ownerEmail, id);
         workoutPlanRepository.delete(plan);
+
+        log.info("Workout plan ID: {} deleted for user ID: {}", plan.getId(), plan.getOwner().getId());
     }
 
     @Transactional

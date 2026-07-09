@@ -8,6 +8,8 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 
+import com.viceda_s.workout_tracker_api.config.RateLimitService;
+
 @SpringBootTest
 public abstract class BaseIntegrationTest {
 
@@ -20,9 +22,13 @@ public abstract class BaseIntegrationTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private RateLimitService rateLimitService;
+
     @AfterEach
     void teardown() {
         jdbcTemplate.execute("TRUNCATE TABLE workout_exercises, workout_plans, exercises, users CASCADE");
+        rateLimitService.clearCaches();
     }
 
     static {
