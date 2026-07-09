@@ -85,6 +85,7 @@ public class WorkoutServiceTest {
 
         when(userService.getByEmailOrThrow("vince@example.com")).thenReturn(owner);
         when(exerciseRepository.findAllById(any())).thenReturn(List.of(exercise));
+        when(workoutPlanRepository.save(any(WorkoutPlan.class))).thenAnswer(i -> i.getArgument(0));
 
         workoutService.createWorkout("vince@example.com", buildRequest(10L));
 
@@ -301,6 +302,11 @@ public class WorkoutServiceTest {
 
         when(userService.getByEmailOrThrow("vince@example.com")).thenReturn(owner);
         when(workoutPlanRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(plan));
+        when(workoutPlanRepository.save(any(WorkoutPlan.class))).thenAnswer(i -> {
+            WorkoutPlan p = i.getArgument(0);
+            p.setId(1L);
+            return p;
+        });
 
         workoutService.updateStatus("vince@example.com", 1L, WorkoutStatus.COMPLETED);
 
