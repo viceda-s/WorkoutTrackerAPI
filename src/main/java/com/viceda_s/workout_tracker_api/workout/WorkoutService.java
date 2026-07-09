@@ -74,8 +74,9 @@ public class WorkoutService {
 
         plan.setExercises(buildWorkoutExercises(plan, request.getExercises()));
 
-        log.info("Workout plan '{}' created for user ID: {}", request.getName(), owner.getId());
-        return workoutPlanRepository.save(plan);
+        WorkoutPlan savedPlan = workoutPlanRepository.save(plan);
+        log.info("Workout plan '{}' (ID: {}) created for user ID: {}", savedPlan.getName(), savedPlan.getId(), owner.getId());
+        return savedPlan;
     }
 
     public List<WorkoutPlan> listWorkouts(String ownerEmail, WorkoutStatus status) {
@@ -122,8 +123,10 @@ public class WorkoutService {
         WorkoutPlan plan = requireOwnedWorkout(ownerEmail, id);
         plan.setStatus(newStatus);
 
-        log.info("Workout plan {} status updated to {} for user ID: {}", id, newStatus, plan.getOwner().getId());
-        return workoutPlanRepository.save(plan);
+        WorkoutPlan savedPlan = workoutPlanRepository.save(plan);
+        log.info("Workout plan {} status updated to {} for user ID: {}", savedPlan.getId(), newStatus,
+                plan.getOwner().getId());
+        return savedPlan;
     }
 
     public ProgressReportResponse generateProgressReport(String ownerEmail, Instant from, Instant to) {

@@ -9,20 +9,20 @@ import org.testcontainers.containers.PostgreSQLContainer;
 public abstract class BaseIntegrationTest {
 
     @SuppressWarnings("resource")
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+    private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("workout_test_db")
             .withUsername("test")
             .withPassword("test");
 
     static {
-        postgres.start();
+        POSTGRES.start();
     }
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
 
         registry.add("jwt.secret", () -> "very_long_and_secure_secret_key_for_testing_only");
     }

@@ -3,6 +3,7 @@ package com.viceda_s.workout_tracker_api.common.exception;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -23,12 +24,36 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private static final String USERS_EMAIL_CONSTRAINT = "users_email_key";
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail handleDataIntegrityViolationException(DataIntegrityViolationException exception) {
-        log.warn("Database constraint violation detected");
+        if (isUsersEmailConstraintViolation(exception)) {
+            log.warn("Duplicate user registration attempt detected");
+            return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Email already in use");
+        }
+
+        log.warn("Database constraint violation detected", exception);
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
                 "Resource conflict: Data already in use");
+    }
+
+    private boolean isUsersEmailConstraintViolation(DataIntegrityViolationException exception) {
+        Throwable cause = exception;
+        while (cause != null) {
+            if (cause instanceof ConstraintViolationException constraintViolationException
+                    && USERS_EMAIL_CONSTRAINT.equals(constraintViolationException.getConstraintName())) {
+                return true;
+            }
+
+            String message = cause.getMessage();
+            if (message != null && message.contains(USERS_EMAIL_CONSTRAINT)) {
+                return true;
+            }
+
+            cause = cause.getCause();
+        }
+        return false;
     }
 
     @ExceptionHandler(ResponseStatusException.class)
