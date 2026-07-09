@@ -36,13 +36,9 @@ public class AuthService {
         newUser.setPassword(passwordEncoder.encode(request.getPassword()));
         newUser.setName(request.getName());
 
-        try {
-            User savedUser = userRepository.saveAndFlush(newUser);
-            log.info("New User registered successfully with ID: {}", savedUser.getId());
-            return savedUser;
-        } catch (DataIntegrityViolationException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
-        }
+        User savedUser = userRepository.saveAndFlush(newUser);
+        log.info("New User registered successfully with ID: {}", savedUser.getId());
+        return savedUser;
     }
 
     public AuthResponse login(LoginRequest request) {
