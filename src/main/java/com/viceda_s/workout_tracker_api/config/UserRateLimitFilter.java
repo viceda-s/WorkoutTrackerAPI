@@ -1,12 +1,10 @@
 package com.viceda_s.workout_tracker_api.config;
 
 import java.io.IOException;
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -38,20 +36,20 @@ public class UserRateLimitFilter extends OncePerRequestFilter {
             Bucket bucket = rateLimitService.resolveBucketForUser(auth.getName());
 
             if (!bucket.tryConsume(1)) {
+                ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS,
+                        "Too many requests");
                 response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
                 response.setContentType("application/json");
-
-                Map<String, Object> body = new HashMap<>();
-                body.put("timestamp", Instant.now());
-                body.put("status", HttpStatus.TOO_MANY_REQUESTS.value());
-                body.put("error", "Too many requests");
-
-                objectMapper.writeValue(response.getOutputStream(), body);
-
+                objectMapper.writeValue(response.getOutputStream(), problemDetail);
                 return;
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return request.getRequestURI().startsWith("/actuator/");
     }
 }

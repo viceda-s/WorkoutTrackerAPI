@@ -3,9 +3,12 @@ package com.viceda_s.workout_tracker_api.workout;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.viceda_s.workout_tracker_api.exercise.Exercise;
@@ -17,22 +20,34 @@ import com.viceda_s.workout_tracker_api.workout.dto.ExerciseVolumeSummary;
 import com.viceda_s.workout_tracker_api.workout.dto.ProgressReportResponse;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class WorkoutService {
-    
+
     private final WorkoutPlanRepository workoutPlanRepository;
     private final WorkoutExerciseRepository workoutExerciseRepository;
     private final ExerciseRepository exerciseRepository;
     private final UserService userService;
 
-    private List<WorkoutExercise> buildWorkoutExercises(WorkoutPlan plan, List<CreateWorkoutRequest.ExerciseLine> lines) {
+    private List<WorkoutExercise> buildWorkoutExercises(WorkoutPlan plan,
+            List<CreateWorkoutRequest.ExerciseLine> lines) {
+        List<Long> exerciseIds = lines.stream().map(CreateWorkoutRequest.ExerciseLine::getExerciseId).toList();
+
+        Map<Long, Exercise> exerciseMap = exerciseRepository.findAllById(exerciseIds).stream()
+                .collect(Collectors.toMap(Exercise::getId, e -> e, (existing, replacement) -> existing));
+
         List<WorkoutExercise> exercises = new ArrayList<>();
         int orderIndex = 0;
         for (CreateWorkoutRequest.ExerciseLine line : lines) {
-            Exercise exercise = exerciseRepository.findById(line.getExerciseId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown exercise id: " + line.getExerciseId()));
+            Exercise exercise = exerciseMap.get(line.getExerciseId());
+            if (exercise == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Unknown exercise id: " + line.getExerciseId());
+            }
 
             WorkoutExercise we = new WorkoutExercise();
             we.setWorkoutPlan(plan);
@@ -47,9 +62,10 @@ public class WorkoutService {
         return exercises;
     }
 
+    @Transactional
     public WorkoutPlan createWorkout(String ownerEmail, CreateWorkoutRequest request) {
         User owner = userService.getByEmailOrThrow(ownerEmail);
-        
+
         WorkoutPlan plan = new WorkoutPlan();
         plan.setOwner(owner);
         plan.setName(request.getName());
@@ -58,12 +74,14 @@ public class WorkoutService {
 
         plan.setExercises(buildWorkoutExercises(plan, request.getExercises()));
 
-        return workoutPlanRepository.save(plan);
+        WorkoutPlan savedPlan = workoutPlanRepository.save(plan);
+        log.info("Workout plan ID: {} created for user ID: {}", savedPlan.getId(), owner.getId());
+        return savedPlan;
     }
 
     public List<WorkoutPlan> listWorkouts(String ownerEmail, WorkoutStatus status) {
         User owner = userService.getByEmailOrThrow(ownerEmail);
-        
+
         if (status == null) {
             return workoutPlanRepository.findByOwnerOrderByScheduledAtAsc(owner);
         } else {
@@ -81,6 +99,7 @@ public class WorkoutService {
         return requireOwnedWorkout(ownerEmail, id);
     }
 
+    @Transactional
     public WorkoutPlan updateWorkout(String ownerEmail, Long id, CreateWorkoutRequest request) {
         WorkoutPlan plan = requireOwnedWorkout(ownerEmail, id);
 
@@ -93,16 +112,21 @@ public class WorkoutService {
         return workoutPlanRepository.save(plan);
     }
 
+    @Transactional
     public void deleteWorkout(String ownerEmail, Long id) {
         WorkoutPlan plan = requireOwnedWorkout(ownerEmail, id);
         workoutPlanRepository.delete(plan);
     }
 
+    @Transactional
     public WorkoutPlan updateStatus(String ownerEmail, Long id, WorkoutStatus newStatus) {
         WorkoutPlan plan = requireOwnedWorkout(ownerEmail, id);
         plan.setStatus(newStatus);
 
-        return workoutPlanRepository.save(plan);
+        WorkoutPlan savedPlan = workoutPlanRepository.save(plan);
+        log.info("Workout plan ID: {} status updated to {} for user ID: {}", savedPlan.getId(), newStatus,
+                plan.getOwner().getId());
+        return savedPlan;
     }
 
     public ProgressReportResponse generateProgressReport(String ownerEmail, Instant from, Instant to) {
@@ -111,7 +135,7 @@ public class WorkoutService {
         long totalCompleted = workoutPlanRepository.countByOwnerAndStatusAndScheduledAtBetween(
                 owner, WorkoutStatus.COMPLETED, from, to);
         List<ExerciseVolumeSummary> volumes = workoutExerciseRepository.summarizeVolumeByOwnerAndPeriod(
-            owner, from, to);
+                owner, from, to);
 
         return new ProgressReportResponse(totalCompleted, volumes);
     }

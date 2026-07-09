@@ -85,7 +85,7 @@ public class AuthControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
                                 .andExpect(status().isConflict())
-                                .andExpect(jsonPath("$.error").value("Email already in use"));
+                                .andExpect(jsonPath("$.detail").value("Email already in use"));
         }
 
         @Test

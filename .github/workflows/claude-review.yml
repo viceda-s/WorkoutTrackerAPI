@@ -1,0 +1,73 @@
+name: Claude review & gated approve
+
+# Add the "claude-review" label to a PR: Claude Code reviews the full diff,
+# posts its findings as a PR comment, and the approval step only runs if
+# Claude's verdict is READY. Re-add the label to re-run after pushing fixes
+# (pushes dismiss stale approvals, so the gate stays honest).
+# The plain self-approve workflow remains as a manual override.
+
+on:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: read
+  actions: read
+  id-token: write
+
+jobs:
+  review-and-approve:
+    if: >-
+      github.event.label.name == 'claude-review' &&
+      github.actor == github.repository_owner
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Claude Code review
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: '--allowedTools "Bash(git:*),Read,Grep,Glob,Write"'
+          prompt: |
+            You are a senior code reviewer for this Java / Spring Boot 3 API.
+            Review the full diff of this pull request against the base branch:
+
+              git diff origin/${{ github.base_ref }}...HEAD
+
+            Read any changed file in full when the diff alone is ambiguous.
+            Evaluate: correctness, security, error handling, transactional
+            boundaries, test coverage (do tests prove real behavior?), and
+            production readiness. Categorize findings as Critical, Important,
+            or Minor, with file:line references and a short why for each.
+
+            Then write exactly two files:
+            1. /tmp/claude-review/review.md — your findings as a markdown
+               review comment: Strengths, Issues by severity, and a final
+               "Verdict: READY" or "Verdict: BLOCKED" line. Minor issues do
+               not block; any Critical or Important issue does.
+            2. /tmp/claude-review/verdict.txt — the single word READY or
+               BLOCKED, nothing else.
+
+      - name: Post review and approve if READY
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [ ! -f /tmp/claude-review/review.md ] || [ ! -f /tmp/claude-review/verdict.txt ]; then
+            echo "Claude did not produce a review/verdict — not approving."
+            exit 1
+          fi
+          gh pr comment "$PR_NUMBER" --body-file /tmp/claude-review/review.md
+          VERDICT="$(tr -d '[:space:]' < /tmp/claude-review/verdict.txt)"
+          if [ "$VERDICT" = "READY" ]; then
+            gh pr review "$PR_NUMBER" --approve \
+              --body "Approved: Claude Code review found no Critical or Important issues (see review comment)."
+          else
+            echo "Claude verdict: $VERDICT — not approving."
+            exit 1
+          fi

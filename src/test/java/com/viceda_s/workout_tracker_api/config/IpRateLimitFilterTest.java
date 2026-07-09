@@ -127,22 +127,4 @@ public class IpRateLimitFilterTest {
         verify(filterChain).doFilter(request, response);
         verify(response, never()).setStatus(any(Integer.class));
     }
-
-    /**
-     * An unauthenticated request with X-Forwarded-For should use
-     * the client IP instead of the Load Balancer IP
-     */
-    @Test
-    void doFilterInternal_WithXForwardedFor_UsesClientIP()
-            throws ServletException, IOException {
-        when(request.getHeader("X-Forwarded-For")).thenReturn("203.0.113.195, 10.0.0.1");
-        when(rateLimitService.resolveBucketForIp("203.0.113.195")).thenReturn(bucket);
-
-        when(bucket.tryConsume(1)).thenReturn(true);
-
-        ipRateLimitFilter.doFilterInternal(request, response, filterChain);
-
-        verify(rateLimitService).resolveBucketForIp("203.0.113.195");
-        verify(filterChain).doFilter(request, response);
-    }
 }

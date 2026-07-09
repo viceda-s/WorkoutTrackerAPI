@@ -31,7 +31,7 @@ import com.viceda_s.workout_tracker_api.user.UserRepository;
  */
 @ExtendWith(MockitoExtension.class)
 public class AuthServiceTest {
-    
+
     @Mock
     private UserRepository userRepository;
 
@@ -45,14 +45,19 @@ public class AuthServiceTest {
     private AuthService authService;
 
     /**
-     * Registering with an email that isn't already in use should save 
+     * Registering with an email that isn't already in use should save
      * the user with their password hashed, not stored in plaintext.
-     */ 
+     */
     @Test
     void registerNewEmail_SavesHashedPassword() {
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("plainPassword123")).thenReturn("hashed-value");
-    
+        when(userRepository.saveAndFlush(any(User.class))).thenAnswer(invocation -> {
+            User u = invocation.getArgument(0);
+            u.setId(99L);
+            return u;
+        });
+
         RegisterRequest request = new RegisterRequest();
         request.setEmail("test@example.com");
         request.setPassword("plainPassword123");
@@ -61,7 +66,7 @@ public class AuthServiceTest {
         authService.register(request);
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(captor.capture());
+        verify(userRepository).saveAndFlush(captor.capture());
 
         User savedUser = captor.getValue();
         assertEquals("hashed-value", savedUser.getPassword());
@@ -69,12 +74,12 @@ public class AuthServiceTest {
     }
 
     /**
-     * Registering with an email already in use should be rejected 
+     * Registering with an email already in use should be rejected
      * properly before any write on the database.
      */
     @Test
     void registerDupEmail() {
-        
+
         User existingUser = new User();
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(existingUser));
 
@@ -82,10 +87,10 @@ public class AuthServiceTest {
         request.setEmail("test@example.com");
         request.setPassword("whatever");
         request.setName("Test");
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
-            authService.register(request));
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> authService.register(request));
         assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
-        verify(userRepository, never()).save(any());
+        verify(userRepository, never()).saveAndFlush(any());
     }
 
     /**
