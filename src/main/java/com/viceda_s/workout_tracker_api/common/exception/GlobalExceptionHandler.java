@@ -1,6 +1,5 @@
 package com.viceda_s.workout_tracker_api.common.exception;
 
-import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,9 +28,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail handleDataIntegrityViolationException(DataIntegrityViolationException exception) {
-        log.warn("Database constraint violation: {}", exception.getMessage());
+        log.warn("Database constraint violation detected");
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
-                "Resource conflict: Already exists or violates database constraints");
+                "Resource conflict: Data already in use");
     }
 
     @ExceptionHandler(ResponseStatusException.class)
@@ -45,22 +44,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed");
 
-        String errors = exception.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining(", "));
+        Map<String, String> errors = exception.getBindingResult().getFieldErrors().stream()
+                .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage,
+                        (existing, replacement) -> existing));
         problemDetail.setProperty("fieldErrors", errors);
 
         return ResponseEntity.badRequest().body(problemDetail);
-    }
-
-    @Override
-    protected ResponseEntity<Object> handleExceptionInternal(
-            Exception exception, Object bodyArg, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", Instant.now());
-        body.put("status", status.value());
-        body.put("error", exception.getMessage());
-        return ResponseEntity.status(status).headers(headers).body(body);
     }
 
     @ExceptionHandler(Exception.class)

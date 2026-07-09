@@ -38,7 +38,7 @@ public class WorkoutService {
         List<Long> exerciseIds = lines.stream().map(CreateWorkoutRequest.ExerciseLine::getExerciseId).toList();
 
         Map<Long, Exercise> exerciseMap = exerciseRepository.findAllById(exerciseIds).stream()
-                .collect(Collectors.toMap(Exercise::getId, e -> e));
+                .collect(Collectors.toMap(Exercise::getId, e -> e, (existing, replacement) -> existing));
 
         List<WorkoutExercise> exercises = new ArrayList<>();
         int orderIndex = 0;
@@ -98,6 +98,7 @@ public class WorkoutService {
         return requireOwnedWorkout(ownerEmail, id);
     }
 
+    @Transactional
     public WorkoutPlan updateWorkout(String ownerEmail, Long id, CreateWorkoutRequest request) {
         WorkoutPlan plan = requireOwnedWorkout(ownerEmail, id);
 
@@ -110,11 +111,13 @@ public class WorkoutService {
         return workoutPlanRepository.save(plan);
     }
 
+    @Transactional
     public void deleteWorkout(String ownerEmail, Long id) {
         WorkoutPlan plan = requireOwnedWorkout(ownerEmail, id);
         workoutPlanRepository.delete(plan);
     }
 
+    @Transactional
     public WorkoutPlan updateStatus(String ownerEmail, Long id, WorkoutStatus newStatus) {
         WorkoutPlan plan = requireOwnedWorkout(ownerEmail, id);
         plan.setStatus(newStatus);
