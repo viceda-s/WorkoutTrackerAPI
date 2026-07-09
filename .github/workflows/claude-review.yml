@@ -2,13 +2,22 @@ name: Claude review & gated approve
 
 # Add the "claude-review" label to a PR: Claude Code reviews the full diff,
 # posts its findings as a PR comment, and the approval step only runs if
-# Claude's verdict is READY. Re-add the label to re-run after pushing fixes
-# (pushes dismiss stale approvals, so the gate stays honest).
-# The plain self-approve workflow remains as a manual override.
+# Claude's verdict is READY. While the label is present, every push
+# re-reviews automatically (and dismisses stale approvals, so the gate
+# stays honest). Remove the label to opt out of auto-re-review.
+#
+# NOTE: a PR that modifies THIS file cannot be gated by it — the action
+# requires the file to match main byte-for-byte (anti-tampering). For such
+# PRs, use the self-approve workflow (recreate its label if deleted).
 
 on:
   pull_request:
-    types: [labeled]
+    types: [labeled, synchronize]
+
+# A push mid-review makes that review stale: cancel it and start over.
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -20,8 +29,9 @@ permissions:
 jobs:
   review-and-approve:
     if: >-
-      github.event.label.name == 'claude-review' &&
-      github.actor == github.repository_owner
+      github.actor == github.repository_owner &&
+      ((github.event.action == 'labeled' && github.event.label.name == 'claude-review') ||
+       (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'claude-review')))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
