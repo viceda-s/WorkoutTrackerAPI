@@ -1,0 +1,37 @@
+name: Self-approve
+
+# Solo-maintainer repo: GitHub forbids approving your own PR, so this
+# workflow submits the required approval as github-actions[bot].
+# Trigger it by adding the "self-approved" label to a PR, or manually
+# via workflow_dispatch once this file is on main.
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Pull request number to approve"
+        required: true
+        type: string
+  pull_request:
+    types: [labeled]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  approve:
+    if: >-
+      github.actor == github.repository_owner &&
+      (github.event_name == 'workflow_dispatch' ||
+       github.event.label.name == 'self-approved')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Approve pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+          TRIGGERED_BY: ${{ github.actor }}
+        run: >-
+          gh pr review "$PR_NUMBER" --approve
+          --body "Auto-approved via self-approve workflow (solo-maintainer repo). Triggered by @${TRIGGERED_BY}."
