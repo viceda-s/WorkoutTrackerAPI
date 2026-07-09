@@ -116,7 +116,7 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-<!-- Testconainers -->
+<!-- Testcontainers -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-testcontainers</artifactId>
