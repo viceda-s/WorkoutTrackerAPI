@@ -89,7 +89,7 @@ public class IpRateLimitFilterTest {
         ipRateLimitFilter.doFilterInternal(request, response, filterChain);
 
         verify(response).setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-        verify(response).setContentType("application/json");
+        verify(response).setContentType("application/problem+json");
         verify(filterChain, never()).doFilter(any(), any());
     }
 

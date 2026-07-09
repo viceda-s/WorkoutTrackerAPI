@@ -33,7 +33,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Email already in use");
         }
 
-        log.warn("Database constraint violation detected: {}", exception.getMostSpecificCause().getClass().getName());
+        if (exception.getMostSpecificCause() instanceof ConstraintViolationException cve) {
+            log.warn("Database constraint violation detected: {}", cve.getConstraintName());
+        } else {
+            log.warn("Database constraint violation detected: {}",
+                    exception.getMostSpecificCause().getClass().getName());
+        }
+
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
                 "Resource conflict: Data already in use");
     }

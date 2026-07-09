@@ -266,8 +266,7 @@ A business-rule error (e.g. requesting a workout that isn't yours):
   "type": "about:blank",
   "title": "Not Found",
   "status": 404,
-  "detail": "Workout not found",
-  "instance": "/api/workouts/1"
+  "detail": "Workout not found"
 }
 ```
 
@@ -278,8 +277,7 @@ A rate limit error (`429 Too Many Requests`):
   "type": "about:blank",
   "title": "Too Many Requests",
   "status": 429,
-  "detail": "Too many requests",
-  "instance": "/api/workouts"
+  "detail": "Too many requests"
 }
 ```
 
@@ -291,7 +289,6 @@ A validation failure (e.g. registering with a blank name) additionally includes 
   "title": "Bad Request",
   "status": 400,
   "detail": "Validation failed",
-  "instance": "/api/auth/register",
   "fieldErrors": {
     "name": "must not be blank"
   }
@@ -305,6 +302,15 @@ A validation failure (e.g. registering with a blank name) additionally includes 
 ```
 
 Tests also run automatically via GitHub Actions on every push and pull request to `main` — see the CI badge at the top of this README, or the [workflow file](.github/workflows/ci.yml) for details.
+
+## Deployment Configuration
+
+When deploying behind a reverse proxy or load balancer (e.g., in Kubernetes or Docker Compose), you **must** configure the trusted internal proxies regex to ensure Rate Limiting extracts the real client IP instead of grouping all requests under the load balancer's IP.
+
+Provide the following environment variable matching your internal subnet:
+`LB_INTERNAL_PROXIES=10\.\d+\.\d+\.\d+|172\.1[6-9]\.\d+\.\d+|172\.2[0-9]\.\d+\.\d+|172\.3[0-1]\.\d+\.\d+|192\.168\.\d+\.\d+`
+
+*(If omitted, it safely defaults to loopback addresses only).*
 
 ## Contributing
 
